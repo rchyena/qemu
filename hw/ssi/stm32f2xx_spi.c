@@ -44,6 +44,7 @@ static void stm32f2xx_spi_reset(DeviceState *dev)
 {
     STM32F2XXSPIState *s = STM32F2XX_SPI(dev);
 
+	printf("stm32f2xx_spi_reset\n");
     s->spi_cr1 = 0x00000000;
     s->spi_cr2 = 0x00000000;
     s->spi_sr = 0x0000000A;
@@ -58,12 +59,51 @@ static void stm32f2xx_spi_reset(DeviceState *dev)
 static void stm32f2xx_spi_transfer(STM32F2XXSPIState *s)
 {
     DB_PRINT("Data to send: 0x%x\n", s->spi_dr);
+    printf("Data to send: 0x%x\n", s->spi_dr);
 
     s->spi_dr = ssi_transfer(s->ssi, s->spi_dr);
     s->spi_sr |= STM_SPI_SR_RXNE;
 
     DB_PRINT("Data received: 0x%x\n", s->spi_dr);
+    printf("Data received: 0x%x\n", s->spi_dr);
+
 }
+
+const char *spi_addrs[] = {
+"cr1",
+"0x01",
+"0x02",
+"0x03",
+"cr2",
+"0x05",
+"0x06",
+"0x07",
+"sr",
+"0x09",
+"0x0a",
+"0x0b",
+"dr",
+"0x0d",
+"0x0e",
+"0x0f",
+"crcpr",
+"0x11",
+"0x12",
+"0x13",
+"rxcrcr",
+"0x15",
+"0x16",
+"0x17",
+"txcrcr",
+"0x19",
+"0x1a",
+"0x1b",
+"i2scfgr",
+"0x1d",
+"0x1e",
+"0x1f",
+"0x20",
+};
 
 static uint64_t stm32f2xx_spi_read(void *opaque, hwaddr addr,
                                      unsigned int size)
@@ -71,6 +111,7 @@ static uint64_t stm32f2xx_spi_read(void *opaque, hwaddr addr,
     STM32F2XXSPIState *s = opaque;
 
     DB_PRINT("Address: 0x%" HWADDR_PRIx "\n", addr);
+    printf("stm32f2xx_spi_read: 0x%" HWADDR_PRIx " %s s->spi_cr1 %llx\n", addr, spi_addrs[addr], s->spi_cr1);
 
     switch (addr) {
     case STM_SPI_CR1:
@@ -120,6 +161,7 @@ static void stm32f2xx_spi_write(void *opaque, hwaddr addr,
     uint32_t value = val64;
 
     DB_PRINT("Address: 0x%" HWADDR_PRIx ", Value: 0x%x\n", addr, value);
+    printf("stm32f2xx_spi_write: 0x%" HWADDR_PRIx " %s, Value: 0x%x\n", addr, spi_addrs[addr], value);
 
     switch (addr) {
     case STM_SPI_CR1:
@@ -193,6 +235,7 @@ static void stm32f2xx_spi_init(Object *obj)
     STM32F2XXSPIState *s = STM32F2XX_SPI(obj);
     DeviceState *dev = DEVICE(obj);
 
+	printf("stm32f2xx_spi_init\n");
     memory_region_init_io(&s->mmio, obj, &stm32f2xx_spi_ops, s,
                           TYPE_STM32F2XX_SPI, 0x400);
     sysbus_init_mmio(SYS_BUS_DEVICE(obj), &s->mmio);

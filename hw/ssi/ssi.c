@@ -37,6 +37,7 @@ static void ssi_cs_default(void *opaque, int n, int level)
     SSIPeripheral *s = SSI_PERIPHERAL(opaque);
     bool cs = !!level;
     assert(n == 0);
+	printf("ssi_cs_default\n");
     if (s->cs != cs) {
         SSIPeripheralClass *ssc = SSI_PERIPHERAL_GET_CLASS(s);
         if (ssc->set_cs) {
@@ -50,6 +51,7 @@ static uint32_t ssi_transfer_raw_default(SSIPeripheral *dev, uint32_t val)
 {
     SSIPeripheralClass *ssc = SSI_PERIPHERAL_GET_CLASS(dev);
 
+	printf("ssi_transfer_raw_default\n");
     if ((dev->cs && ssc->cs_polarity == SSI_CS_HIGH) ||
             (!dev->cs && ssc->cs_polarity == SSI_CS_LOW) ||
             ssc->cs_polarity == SSI_CS_NONE) {
@@ -63,6 +65,7 @@ static void ssi_peripheral_realize(DeviceState *dev, Error **errp)
     SSIPeripheral *s = SSI_PERIPHERAL(dev);
     SSIPeripheralClass *ssc = SSI_PERIPHERAL_GET_CLASS(s);
 
+	printf("ssi_peripheral_realize\n");
     if (ssc->transfer_raw == ssi_transfer_raw_default &&
             ssc->cs_polarity != SSI_CS_NONE) {
         qdev_init_gpio_in_named(dev, ssi_cs_default, SSI_GPIO_CS, 1);
@@ -100,6 +103,7 @@ DeviceState *ssi_create_peripheral(SSIBus *bus, const char *name)
 {
     DeviceState *dev = qdev_new(name);
 
+	printf("ssi_create_peripheral\n");
     ssi_realize_and_unref(dev, bus, &error_fatal);
     return dev;
 }
@@ -107,6 +111,7 @@ DeviceState *ssi_create_peripheral(SSIBus *bus, const char *name)
 SSIBus *ssi_create_bus(DeviceState *parent, const char *name)
 {
     BusState *bus;
+	printf("ssi_create_bus\n");
     bus = qbus_new(TYPE_SSI_BUS, parent, name);
     return SSI_BUS(bus);
 }
@@ -118,8 +123,12 @@ uint32_t ssi_transfer(SSIBus *bus, uint32_t val)
     SSIPeripheralClass *ssc;
     uint32_t r = 0;
 
+	printf("ssi_transfer val %ld b->name %s b->children %p b->num_children %d\n", val, b->name, b->children, b->num_children);
+	
+
     QTAILQ_FOREACH(kid, &b->children, sibling) {
         SSIPeripheral *peripheral = SSI_PERIPHERAL(kid->child);
+		printf("ssi_transfer peripheral %p\n", peripheral);
         ssc = SSI_PERIPHERAL_GET_CLASS(peripheral);
         r |= ssc->transfer_raw(peripheral, val);
     }

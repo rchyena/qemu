@@ -112,6 +112,10 @@ config NETDUINOPLUS2
     bool
     select STM32F405_SOC
 
+config UPSAT_COMM
+    bool
+    select STM32F407VGTX_SOC
+
 config NSERIES
     bool
     select OMAP
@@ -348,8 +352,23 @@ config STM32F205_SOC
     select STM32F2XX_SYSCFG
     select STM32F2XX_ADC
     select STM32F2XX_SPI
+	select CC112X
 
 config STM32F405_SOC
+    bool
+    select ARM_V7M
+    select OR_IRQ
+    select STM32F4XX_SYSCFG
+    select STM32F4XX_EXTI
+
+config STM32F405_SOC
+    bool
+    select ARM_V7M
+    select OR_IRQ
+    select STM32F4XX_SYSCFG
+    select STM32F4XX_EXTI
+
+config STM32F407VGTX_SOC
     bool
     select ARM_V7M
     select OR_IRQ
