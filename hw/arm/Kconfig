@@ -350,9 +350,8 @@ config STM32F205_SOC
     select STM32F2XX_TIMER
     select STM32F2XX_USART
     select STM32F2XX_SYSCFG
-    select STM32F2XX_ADC
     select STM32F2XX_SPI
-	select CC112X
+    select STM32F2XX_ADC
 
 config STM32F405_SOC
     bool
@@ -374,6 +373,8 @@ config STM32F407VGTX_SOC
     select OR_IRQ
     select STM32F4XX_SYSCFG
     select STM32F4XX_EXTI
+#   select STM32F2XX_GPIO
+	select CC112X
 
 config XLNX_ZYNQMP_ARM
     bool
