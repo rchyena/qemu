@@ -40,6 +40,30 @@
 
 #define DB_PRINT(fmt, args...) DB_PRINT_L(1, fmt, ## args)
 
+
+#define MAX_SIZE 100
+int size = 0; // Current number of elements in the map
+char keys[MAX_SIZE][100]; // Array to store the keys
+int values[MAX_SIZE]; // Array to store the values
+
+
+/* Passthrough Implemenation */
+// Tells write to discard the 0 value.
+int seen_addr = 0;
+// Tells read to return 'A' (marcstate check).
+int seen_value = 0;
+int toWrite = 0;
+int toRead = 0;
+
+/* Registers 
+ * Keeps track of registers and their values
+ * e.g. [reg_addr][reg_value]
+ *      cc_tx_wr_rg(FS_VCO2, 0xFF) -> registers[FS_VC02][0xFF]
+ *      cc_tx_rd_rg(FS_VCO2, &value) -> value = 0xFF
+ */
+uint8_t registers[217][1];
+
+  
 static void stm32f2xx_spi_reset(DeviceState *dev)
 {
     STM32F2XXSPIState *s = STM32F2XX_SPI(dev);
@@ -56,16 +80,28 @@ static void stm32f2xx_spi_reset(DeviceState *dev)
     s->spi_i2spr = 0x00000002;
 }
 
+/*
+ * Pull something from SSI onto DR, then telling DR we received.
+ * Goes out, updates DR.
+ * "~~compare~~ and swap".
+ *
+ * Normally another device would sit on the other end of SPIBUS,
+ * but it doesn't exist here. So we can't swap data bytes.
+ */
 static void stm32f2xx_spi_transfer(STM32F2XXSPIState *s)
 {
     DB_PRINT("Data to send: 0x%x\n", s->spi_dr);
     printf("Data to send: 0x%x\n", s->spi_dr);
+    printf("ssi_transfer before s->ssi: 0x%x\n", s->ssi);
 
-    s->spi_dr = ssi_transfer(s->ssi, s->spi_dr);
+    //s->spi_dr = ssi_transfer(s->ssi, s->spi_dr);
+    // Assuming status register needs to be updated to reflect some sort of status?
     s->spi_sr |= STM_SPI_SR_RXNE;
 
+    // Not finding device and just receiving 0.
     DB_PRINT("Data received: 0x%x\n", s->spi_dr);
     printf("Data received: 0x%x\n", s->spi_dr);
+    printf("ssi_transfer after s->ssi: 0x%x\n", s->ssi);
 
 }
 
@@ -111,7 +147,8 @@ static uint64_t stm32f2xx_spi_read(void *opaque, hwaddr addr,
     STM32F2XXSPIState *s = opaque;
 
     DB_PRINT("Address: 0x%" HWADDR_PRIx "\n", addr);
-    printf("stm32f2xx_spi_read: 0x%" HWADDR_PRIx " %s s->spi_cr1 %llx\n", addr, spi_addrs[addr], s->spi_cr1);
+    printf("stm32f2xx_spi_read register: 0x%" HWADDR_PRIx " %s\n", addr, spi_addrs[addr]);
+    printf("cr1: %llx, sr: %llx, dr: %llx\n", s->spi_cr1, s->spi_sr, s->spi_dr);
 
     switch (addr) {
     case STM_SPI_CR1:
@@ -125,6 +162,29 @@ static uint64_t stm32f2xx_spi_read(void *opaque, hwaddr addr,
     case STM_SPI_DR:
         stm32f2xx_spi_transfer(s);
         s->spi_sr &= ~STM_SPI_SR_RXNE;
+        /*
+         * We've passed check 1, but we need another check (i.e. seen_value), because
+         * otherwise we return 0x41 too soon. We need the next read to be 0x41.
+         */
+        // Reads from marcstate register
+        // Separate case, because we're expecting a return that wasn't a previous register write?
+        if (seen_addr == 0x73) {
+            seen_addr = 0;
+            seen_value = 1;
+        } else if (seen_value == 1) {
+            seen_value = 0;
+            s->spi_dr = 0x41;
+        } else if ((seen_addr != 0) && (toRead == 1)) {
+            seen_value = registers[seen_addr][0];
+            printf("Read 0x%x from 0x%x\n", seen_value, seen_addr);
+            toRead = 2;
+        } else if (toRead == 2) {
+            s->spi_dr = seen_value;
+            seen_value = 0;
+            toRead = 0;
+        }
+
+        printf("returning from spi_read with s->spi_dr: 0x%x\n", s->spi_dr);
         return s->spi_dr;
     case STM_SPI_CRCPR:
         qemu_log_mask(LOG_UNIMP, "%s: CRC is not implemented, the registers " \
@@ -162,6 +222,49 @@ static void stm32f2xx_spi_write(void *opaque, hwaddr addr,
 
     DB_PRINT("Address: 0x%" HWADDR_PRIx ", Value: 0x%x\n", addr, value);
     printf("stm32f2xx_spi_write: 0x%" HWADDR_PRIx " %s, Value: 0x%x\n", addr, spi_addrs[addr], value);
+    
+    /*
+     * Scripting (passthrough) attempt.
+     * Value can be anything coming from TxBuffer. Below are key values to make note of:
+     * 0x73: Marcstate address (set seen_addr to indicate we're about to read marcstate).
+     * 0x25: FS_VCO2 register address
+     * 0x15: FS_CAL2 register address
+     * 0x2F: Signals register write - write data byte into register variable.
+     * 0xAF: Signals register read - return data from register variable.
+     */
+    switch (value) {
+        // Incoming write (in a write, first byte of TxBuffer is 0x2f)
+        case 0x2f:
+            printf("Case 2f\n");
+            toWrite = 1;
+            break;
+        // Incoming read (in a read, first byte of TxBuffer is 0xaf)
+        case 0xaf:
+            printf("Case af\n");
+            toRead = 1;
+            break;
+        case 0x73:
+            seen_addr = value;
+            break;
+        case 0x25:
+            seen_addr = value;
+            break;
+        case 0x15:
+            seen_addr = value;
+            break;
+        default:
+            break;
+    }
+    
+    // This is a wr_rg call and we've seen address of register to write to (here, value should be byte to write)
+    if ((toWrite == 1) && (seen_addr != 0) && (seen_addr != value)) {
+        // Referencing register using extended reg address (i.e. lower 2 bytes as referenced by upsat)
+        printf("Write 0x%x to 0x%x\n", value, seen_addr);
+        registers[seen_addr][0] = value;
+        printf("Confirming value was written: 0x%x\n", registers[seen_addr][0]);
+        toWrite = 0;
+        seen_addr = 0;
+    }
 
     switch (addr) {
     case STM_SPI_CR1:
@@ -174,10 +277,18 @@ static void stm32f2xx_spi_write(void *opaque, hwaddr addr,
         return;
     case STM_SPI_SR:
         /* Read only register, except for clearing the CRCERR bit, which
-         * is not supported
+         * is not supported.
          */
         return;
     case STM_SPI_DR:
+        /* If spi_dr gets set to 0, the RxBuffer receives this as last byte instead of marcstate (value of 0 results in the Rx[len-1]).
+         * Why even Tx a 0 if we are placing that into RxBuffer? Is shipping out 0 supposed to return something else?
+         * It seems yes, shipping out 0 is supposed to return something non-zero, but we have to work around that here since no device.
+         */
+        if ((value == 0) && (seen_addr != 0)) {
+            stm32f2xx_spi_transfer(s);
+            return;
+        }
         s->spi_dr = value;
         stm32f2xx_spi_transfer(s);
         return;

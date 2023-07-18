@@ -123,16 +123,18 @@ uint32_t ssi_transfer(SSIBus *bus, uint32_t val)
     SSIPeripheralClass *ssc;
     uint32_t r = 0;
 
-	printf("ssi_transfer val %ld b->name %s b->children %p b->num_children %d\n", val, b->name, b->children, b->num_children);
+	printf("ssi_transfer val %ld b->name %s b->children %p b->num_children %d\n", val, b->name, &b->children, b->num_children);
 	
 
     QTAILQ_FOREACH(kid, &b->children, sibling) {
+		printf("Entering ssi_transfer loop\n");
         SSIPeripheral *peripheral = SSI_PERIPHERAL(kid->child);
 		printf("ssi_transfer peripheral %p\n", peripheral);
         ssc = SSI_PERIPHERAL_GET_CLASS(peripheral);
         r |= ssc->transfer_raw(peripheral, val);
     }
 
+    printf("r: %d\n", r);
     return r;
 }
 
