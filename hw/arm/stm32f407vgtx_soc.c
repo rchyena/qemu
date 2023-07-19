@@ -59,38 +59,51 @@ static void stm32f407vgtx_soc_initfn(Object *obj)
     STM32F407VGTXState *s = STM32F407VGTX_SOC(obj);
     int i;
 
+    printf("init armv7m\n");
     object_initialize_child(obj, "armv7m", &s->armv7m, TYPE_ARMV7M);
 
+    printf("init syscfg\n");
     object_initialize_child(obj, "syscfg", &s->syscfg, TYPE_STM32F4XX_SYSCFG);
 
-    object_initialize_child(obj, "gpio", &s->syscfg, TYPE_STM32F4XX_GPIO);
+    //printf("init gpio\n");
+    //object_initialize_child(obj, "gpio", &s->gpio, TYPE_STM32F4XX_GPIO);
+    
+    //printf("init cc112x\n");
+    //object_initialize_child(obj, "cc112x", &s->cc112x, TYPE_CC_112X);
 
+    printf("init uart\n");
     for (i = 0; i < STM_NUM_USARTS; i++) {
         object_initialize_child(obj, "usart[*]", &s->usart[i],
                                 TYPE_STM32F2XX_USART);
     }
 
+    printf("init timer\n");
     for (i = 0; i < STM_NUM_TIMERS; i++) {
         object_initialize_child(obj, "timer[*]", &s->timer[i],
                                 TYPE_STM32F2XX_TIMER);
     }
 
+    printf("init adc\n");
     for (i = 0; i < STM_NUM_ADCS; i++) {
         object_initialize_child(obj, "adc[*]", &s->adc[i], TYPE_STM32F2XX_ADC);
     }
 
+    printf("init spis\n");
     for (i = 0; i < STM_NUM_SPIS; i++) {
         object_initialize_child(obj, "spi[*]", &s->spi[i], TYPE_STM32F2XX_SPI);
     }
 
+    printf("init exti\n");
     object_initialize_child(obj, "exti", &s->exti, TYPE_STM32F4XX_EXTI);
 
+    printf("init clocks\n");
     s->sysclk = qdev_init_clock_in(DEVICE(s), "sysclk", NULL, NULL, 0);
     s->refclk = qdev_init_clock_in(DEVICE(s), "refclk", NULL, NULL, 0);
 }
 
 static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
 {
+    printf("starting to realize devices\n");
     STM32F407VGTXState *s = STM32F407VGTX_SOC(dev_soc);
     MemoryRegion *system_memory = get_system_memory();
     DeviceState *dev, *armv7m;
@@ -249,21 +262,27 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
     }
     // create a gpio device for gpioa
 
+    /*
     dev = DEVICE(&s->gpio);
     if (!sysbus_realize(SYS_BUS_DEVICE(&s->gpio), errp)) {
         return;
     }
+    */
 
     busdev = SYS_BUS_DEVICE(dev);
     sysbus_mmio_map(busdev, 0, EXTI_ADDR);
 
+    printf("sysbus_connect_irq\n");
     for (i = 0; i < 16; i++) {
         sysbus_connect_irq(busdev, i, qdev_get_gpio_in(armv7m, exti_irq[i]));
     }
+    printf("qdev_connect_gpio_out\n");
     for (i = 0; i < 16; i++) {
         qdev_connect_gpio_out(DEVICE(&s->syscfg), i, qdev_get_gpio_in(dev, i));
     }
 
+    // anything at this location, we don't care about behavior (don't make us fail)
+    printf("unimplemented device creates\n");
     create_unimplemented_device("timer[7]",    0x40001400, 0x400);
     create_unimplemented_device("timer[12]",   0x40001800, 0x400);
     create_unimplemented_device("timer[6]",    0x40001000, 0x400);
@@ -307,6 +326,7 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
     create_unimplemented_device("USB OTG FS",  0x50000000, 0x31000);
     create_unimplemented_device("DCMI",        0x50050000, 0x400);
     create_unimplemented_device("RNG",         0x50060800, 0x400);
+    printf("end of soc realization function\n");
 }
 
 static Property stm32f407vgtx_soc_properties[] = {

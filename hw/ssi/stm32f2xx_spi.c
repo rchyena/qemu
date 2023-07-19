@@ -40,17 +40,10 @@
 
 #define DB_PRINT(fmt, args...) DB_PRINT_L(1, fmt, ## args)
 
-
-#define MAX_SIZE 100
-int size = 0; // Current number of elements in the map
-char keys[MAX_SIZE][100]; // Array to store the keys
-int values[MAX_SIZE]; // Array to store the values
-
-
 /* Passthrough Implemenation */
 // Tells write to discard the 0 value.
 int seen_addr = 0;
-// Tells read to return 'A' (marcstate check).
+// Check for if we've seen data byte.
 int seen_value = 0;
 int toWrite = 0;
 int toRead = 0;
@@ -225,6 +218,7 @@ static void stm32f2xx_spi_write(void *opaque, hwaddr addr,
     
     /*
      * Scripting (passthrough) attempt.
+     * Switch statement here is interpreting bytes as the come in from the Tx Buffer
      * Value can be anything coming from TxBuffer. Below are key values to make note of:
      * 0x73: Marcstate address (set seen_addr to indicate we're about to read marcstate).
      * 0x25: FS_VCO2 register address
@@ -233,12 +227,10 @@ static void stm32f2xx_spi_write(void *opaque, hwaddr addr,
      * 0xAF: Signals register read - return data from register variable.
      */
     switch (value) {
-        // Incoming write (in a write, first byte of TxBuffer is 0x2f)
         case 0x2f:
             printf("Case 2f\n");
             toWrite = 1;
             break;
-        // Incoming read (in a read, first byte of TxBuffer is 0xaf)
         case 0xaf:
             printf("Case af\n");
             toRead = 1;

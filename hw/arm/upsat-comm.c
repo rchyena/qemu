@@ -55,6 +55,7 @@ static void upsat_comm_init(MachineState *machine)
 
 static void upsat_comm_machine_init(MachineClass *mc)
 {
+    printf("Init UPsat Comm Machine\n");
     mc->desc = "Upsat Comm Device";
     mc->init = upsat_comm_init;
     mc->ignore_memory_transaction_failures = true;

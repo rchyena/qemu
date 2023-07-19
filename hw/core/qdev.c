@@ -321,7 +321,7 @@ static void device_reset_child_foreach(Object *obj, ResettableChildCallback cb,
 bool qdev_realize(DeviceState *dev, BusState *bus, Error **errp)
 {
     assert(!dev->realized && !dev->parent_bus);
-	printf("qdev_realize dev->name %s bus->name %s\n", dev->name, bus->name);
+	//printf("qdev_realize dev->name %s bus->name %s\n", dev->name, bus->name);
     if (bus) {
         if (!qdev_set_parent_bus(dev, bus, errp)) {
             return false;

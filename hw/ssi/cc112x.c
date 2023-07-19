@@ -134,6 +134,8 @@ static int cc112x_init(SSIPeripheral *d, int inputs)
 }
 
 
+// Once device is init'ed, it will be realized
+// 
 static void cc1120_realize(SSIPeripheral *dev, Error **errp)
 {
 	printf("cc1120_realize\n");
@@ -192,15 +194,19 @@ static void cc1120_class_init(ObjectClass *klass, void *data)
 }
 
 static const TypeInfo cc1120_info = {
+    // Just here for describing relationship
     .name          = TYPE_CC_1120,
     .parent        = TYPE_CC_112X,
     .class_init    = cc1120_class_init,
 };
 
+// For registering object type
 static void cc112x_register_types(void)
 {
+    // Supplying pointer to descriptor structure
     type_register_static(&cc112x_info);
     type_register_static(&cc1120_info);
 }
 
+// Creating object by passing in fn for init of this type
 type_init(cc112x_register_types)

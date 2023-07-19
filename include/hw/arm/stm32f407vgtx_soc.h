@@ -34,6 +34,7 @@
 #include "hw/or-irq.h"
 #include "hw/ssi/stm32f2xx_spi.h"
 #include "hw/arm/armv7m.h"
+#include "hw/ssi/cc112x.h"
 #include "qom/object.h"
 
 #define TYPE_STM32F407VGTX_SOC "stm32f407vgtx-soc"
@@ -61,6 +62,7 @@ struct STM32F407VGTXState {
     STM32F4xxSyscfgState syscfg;
     STM32F4xxGpioState gpio;
     STM32F4xxExtiState exti;
+    //CC112xState cc112x;
 
     STM32F2XXUsartState usart[STM_NUM_USARTS];
     STM32F2XXTimerState timer[STM_NUM_TIMERS];

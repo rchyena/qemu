@@ -15,6 +15,7 @@
 
 #include "hw/ssi/ssi.h"
 #include "qom/object.h"
+#include "hw/sysbus.h"
 
 /*
  * This is a model of the Maxim MAX1110/1111 ADC chip, which for QEMU
@@ -32,8 +33,15 @@
  *  + the interrupt line is not correctly implemented, and will never
  *    be lowered once it has been asserted.
  */
+
+#define TYPE_CC_112X "cc112x"
+OBJECT_DECLARE_SIMPLE_TYPE(CC112xState, CC_112X)
+
+#define TYPE_CC_1120 "cc1120"
+
 struct CC112xState {
     SSIPeripheral parent_obj;
+    //SysBusDevice parent_obj;
 
     qemu_irq interrupt;
     /* Values of inputs at system reset (settable by QOM property) */
@@ -45,11 +53,5 @@ struct CC112xState {
     uint8_t input[8];
     int inputs, com;
 };
-
-#define TYPE_CC_112X "cc112x"
-
-OBJECT_DECLARE_SIMPLE_TYPE(CC112xState, CC_112X)
-
-#define TYPE_CC_1120 "cc1120"
 
 #endif
