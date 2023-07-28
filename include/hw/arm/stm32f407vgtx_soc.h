@@ -33,6 +33,7 @@
 #include "hw/misc/stm32f4xx_gpio.h"
 #include "hw/or-irq.h"
 #include "hw/ssi/stm32f2xx_spi.h"
+#include "hw/misc/stm32f4xx_i2s.h"
 #include "hw/arm/armv7m.h"
 #include "hw/ssi/cc112x.h"
 #include "qom/object.h"
@@ -44,6 +45,7 @@ OBJECT_DECLARE_SIMPLE_TYPE(STM32F407VGTXState, STM32F407VGTX_SOC)
 #define STM_NUM_TIMERS 4
 #define STM_NUM_ADCS 6
 #define STM_NUM_SPIS 6
+#define STM_NUM_I2SS 4
 
 #define FLASH_BASE_ADDRESS 0x08000000
 #define FLASH_SIZE (1024 * 1024)
@@ -61,6 +63,7 @@ struct STM32F407VGTXState {
 
     STM32F4xxSyscfgState syscfg;
     STM32F4xxGpioState gpio;
+    STM32F4xxI2SState i2s;
     STM32F4xxExtiState exti;
     //CC112xState cc112x;
 

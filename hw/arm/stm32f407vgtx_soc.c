@@ -93,6 +93,10 @@ static void stm32f407vgtx_soc_initfn(Object *obj)
         object_initialize_child(obj, "spi[*]", &s->spi[i], TYPE_STM32F2XX_SPI);
     }
 
+    // should there be only one like gpio?
+    printf("init i2s\n");
+    object_initialize_child(obj, "i2s", &s->i2s, TYPE_STM32F4XX_I2S);
+
     printf("init exti\n");
     object_initialize_child(obj, "exti", &s->exti, TYPE_STM32F4XX_EXTI);
 
@@ -290,8 +294,8 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
     create_unimplemented_device("timer[14]",   0x40002000, 0x400);
     create_unimplemented_device("RTC and BKP", 0x40002800, 0x400);
     create_unimplemented_device("WWDG",        0x40002C00, 0x400);
-    create_unimplemented_device("IWDG",        0x40003000, 0x400);
-    create_unimplemented_device("I2S2ext",     0x40003000, 0x400);
+    // create_unimplemented_device("IWDG",        0x40003000, 0x400);
+    // create_unimplemented_device("I2S2ext",     0x40003000, 0x400);
     create_unimplemented_device("I2S3ext",     0x40004000, 0x400);
     create_unimplemented_device("I2C1",        0x40005400, 0x400);
     create_unimplemented_device("I2C2",        0x40005800, 0x400);
