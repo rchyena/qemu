@@ -42,7 +42,7 @@
 
 /* Passthrough Implemenation */
 // Tells write to discard the 0 value.
-int seen_addr = 0;
+int radio_addr = 0;
 // Check for if we've seen data byte.
 int seen_value = 0;
 int toWrite = 0;
@@ -161,15 +161,15 @@ static uint64_t stm32f2xx_spi_read(void *opaque, hwaddr addr,
          */
         // Reads from marcstate register
         // Separate case, because we're expecting a return that wasn't a previous register write?
-        if (seen_addr == 0x73) {
-            seen_addr = 0;
+        if (radio_addr == 0x73) {
+            radio_addr = 0;
             seen_value = 1;
         } else if (seen_value == 1) {
             seen_value = 0;
             s->spi_dr = 0x41;
-        } else if ((seen_addr != 0) && (toRead == 1)) {
-            seen_value = registers[seen_addr][0];
-            printf("Read 0x%x from 0x%x\n", seen_value, seen_addr);
+        } else if ((radio_addr != 0) && (toRead == 1)) {
+            seen_value = registers[radio_addr][0];
+            printf("Read 0x%x from 0x%x\n", seen_value, radio_addr);
             toRead = 2;
         } else if (toRead == 2) {
             s->spi_dr = seen_value;
@@ -220,11 +220,14 @@ static void stm32f2xx_spi_write(void *opaque, hwaddr addr,
      * Scripting (passthrough) attempt.
      * Switch statement here is interpreting bytes as the come in from the Tx Buffer
      * Value can be anything coming from TxBuffer. Below are key values to make note of.
+     * Radio reg addresses > 0x2F00 have 0x2F masked away on reads/writes
+     * Radio reg addresses < 0x2F00 are not altered for writes
+     *     but for reads, the address is AND'ed with 0x0080, then stripped of first 2 bytes
      *
-     * If spi_write() is called AND (reg addr >= CC_EXT_ADD (0x2F00)), then first byte is a header value of 0x2F or 0xAF
+     * If spi_write() is called AND (reg addr >= CC_EXT_ADD (0x2F00)), then first byte is a "header" value of 0x2F or 0xAF
      * 0x2F: Signals register write - write data byte into register variable. (2F + XX)
      * 0xAF: Signals register read - return data from register variable. (AF + XX)
-     * 0x73: Marcstate address (set seen_addr to indicate we're about to read marcstate).
+     * 0x73: Marcstate address (set radio_addr to indicate we're about to read marcstate).
      * 0x25: FS_VCO2 register address (2F25)
      * 0x15: FS_CAL2 register address (2F15)
      *
@@ -243,37 +246,42 @@ static void stm32f2xx_spi_write(void *opaque, hwaddr addr,
             break;
         /*
         case 0x73:
-            seen_addr = value;
+            radio_addr = value;
             break;
         case 0x25:
-            seen_addr = value;
+            radio_addr = value;
             break;
         case 0x15:
-            seen_addr = value;
+            radio_addr = value;
             break;
         */
         default:
-            seen_addr = value;
+            radio_addr = value;
             break;
     }
     
-    // Setting toWrite when buffer is length 2
-    if ((toWrite == 0) && (toRead == 0) && (seen_addr < 0x2f)) {
+    /* Reads and writes with no header (i.e., radio address < 0x2F)
+     * Read: Address was AND'ed with 0x0080 before coming here, so
+     *       anything > 0x2F is a read (anything < 0x2F & 0x0080 = >0x2F)
+     * Write: Address was left intact
+    */
+    if ((toWrite == 0) && (toRead == 0) && (radio_addr < 0x2f)) {
         toWrite = 1;
+    // READ with no header, interested in address value (>0x2F = read)
+    } else if ((toWrite == 0) && (toRead == 0) && (radio_addr > 0x2f)) {
+        toRead = 1;
     }
     
-    // This is a wr_rg call and we've seen address of register to write to (here, value should be byte to write)
-    if ((toWrite == 1) && (seen_addr != 0) && (seen_addr != value)) {
+    /* Reads and writes with a header (i.e., radio address > 0x2F)
+     * This is a wr_rg call and we've seen address of register to write to (here, value should be byte to write)
+    */
+    if ((toWrite == 1) && (radio_addr != 0) && (radio_addr != value)) {
         // Referencing register using extended reg address (i.e. lower 2 bytes as referenced by upsat)
-        printf("Write 0x%x to 0x%x\n", value, seen_addr);
-        registers[seen_addr][0] = value;
-        printf("Confirming value was written: 0x%x\n", registers[seen_addr][0]);
+        printf("Write 0x%x to 0x%x\n", value, radio_addr);
+        registers[radio_addr][0] = value;
+        printf("Confirming value was written: 0x%x\n", registers[radio_addr][0]);
         toWrite = 0;
-        seen_addr = 0;
-    // No header value, but since next value is 0, we're reading
-    // (write is set) AND (looking at next value) AND (it's a read)
-    } else if ((toWrite == 1) && (seen_addr == 0) && (seen_addr != value)) {
-        toRead = 1;
+        radio_addr = 0;
     }
 
     switch (addr) {
@@ -295,7 +303,7 @@ static void stm32f2xx_spi_write(void *opaque, hwaddr addr,
          * Why even Tx a 0 if we are placing that into RxBuffer? Is shipping out 0 supposed to return something else?
          * It seems yes, shipping out 0 is supposed to return something non-zero, but we have to work around that here since no device.
          */
-        if ((value == 0) && (seen_addr != 0)) {
+        if ((value == 0) && (radio_addr != 0)) {
             stm32f2xx_spi_transfer(s);
             return;
         }
