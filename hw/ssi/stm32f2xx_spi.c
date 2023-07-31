@@ -219,12 +219,18 @@ static void stm32f2xx_spi_write(void *opaque, hwaddr addr,
     /*
      * Scripting (passthrough) attempt.
      * Switch statement here is interpreting bytes as the come in from the Tx Buffer
-     * Value can be anything coming from TxBuffer. Below are key values to make note of:
+     * Value can be anything coming from TxBuffer. Below are key values to make note of.
+     *
+     * If spi_write() is called AND (reg addr >= CC_EXT_ADD (0x2F00)), then first byte is a header value of 0x2F or 0xAF
+     * 0x2F: Signals register write - write data byte into register variable. (2F + XX)
+     * 0xAF: Signals register read - return data from register variable. (AF + XX)
      * 0x73: Marcstate address (set seen_addr to indicate we're about to read marcstate).
-     * 0x25: FS_VCO2 register address
-     * 0x15: FS_CAL2 register address
-     * 0x2F: Signals register write - write data byte into register variable.
-     * 0xAF: Signals register read - return data from register variable.
+     * 0x25: FS_VCO2 register address (2F25)
+     * 0x15: FS_CAL2 register address (2F15)
+     *
+     * If spi_write() is called AND (reg addr < CC_EXT_ADD (0x2F00)), then it will NOT have a header value,
+     * first byte is addr, and read/write is determined by value of address
+     * 0x00: IOCFG3 register address
      */
     switch (value) {
         case 0x2f:
@@ -235,6 +241,7 @@ static void stm32f2xx_spi_write(void *opaque, hwaddr addr,
             printf("Case af\n");
             toRead = 1;
             break;
+        /*
         case 0x73:
             seen_addr = value;
             break;
@@ -244,8 +251,15 @@ static void stm32f2xx_spi_write(void *opaque, hwaddr addr,
         case 0x15:
             seen_addr = value;
             break;
+        */
         default:
+            seen_addr = value;
             break;
+    }
+    
+    // Setting toWrite when buffer is length 2
+    if ((toWrite == 0) && (toRead == 0) && (seen_addr < 0x2f)) {
+        toWrite = 1;
     }
     
     // This is a wr_rg call and we've seen address of register to write to (here, value should be byte to write)
@@ -256,6 +270,10 @@ static void stm32f2xx_spi_write(void *opaque, hwaddr addr,
         printf("Confirming value was written: 0x%x\n", registers[seen_addr][0]);
         toWrite = 0;
         seen_addr = 0;
+    // No header value, but since next value is 0, we're reading
+    // (write is set) AND (looking at next value) AND (it's a read)
+    } else if ((toWrite == 1) && (seen_addr == 0) && (seen_addr != value)) {
+        toRead = 1;
     }
 
     switch (addr) {

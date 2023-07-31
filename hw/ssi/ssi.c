@@ -79,6 +79,7 @@ static void ssi_peripheral_class_init(ObjectClass *klass, void *data)
     SSIPeripheralClass *ssc = SSI_PERIPHERAL_CLASS(klass);
     DeviceClass *dc = DEVICE_CLASS(klass);
 
+	printf("ssi_peripheral_class_init\n");
     dc->realize = ssi_peripheral_realize;
     dc->bus_type = TYPE_SSI_BUS;
     if (!ssc->transfer_raw) {

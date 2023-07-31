@@ -124,6 +124,7 @@ static void stm32f2xx_timer_reset(DeviceState *dev)
 static uint64_t stm32f2xx_timer_read(void *opaque, hwaddr offset,
                            unsigned size)
 {
+    printf("stm32f2xx_timer_read\n");
     STM32F2XXTimerState *s = opaque;
 
     DB_PRINT("Read 0x%"HWADDR_PRIx"\n", offset);
@@ -179,6 +180,7 @@ static uint64_t stm32f2xx_timer_read(void *opaque, hwaddr offset,
 static void stm32f2xx_timer_write(void *opaque, hwaddr offset,
                         uint64_t val64, unsigned size)
 {
+    printf("stm32fxx_timer_write\n");
     STM32F2XXTimerState *s = opaque;
     uint32_t value = val64;
     int64_t now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
@@ -306,6 +308,7 @@ static Property stm32f2xx_timer_properties[] = {
 
 static void stm32f2xx_timer_init(Object *obj)
 {
+    printf("stm32fxx_timer_init\n");
     STM32F2XXTimerState *s = STM32F2XXTIMER(obj);
 
     sysbus_init_irq(SYS_BUS_DEVICE(obj), &s->irq);

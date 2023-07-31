@@ -34,9 +34,9 @@
 
 static uint32_t cc112x_read(CC112xState *s)
 {
+	printf("cc112x_read\n");
     if (!s->tb1)
         return 0;
-	printf("cc112x_read\n");
 
     switch (s->cycle ++) {
     case 1:
@@ -51,8 +51,8 @@ static uint32_t cc112x_read(CC112xState *s)
 /* Interpret a control-byte */
 static void cc112x_write(CC112xState *s, uint32_t value)
 {
-    int measure, chan;
 	printf("cc112x_write %x\n",value);
+    int measure, chan;
 
     /* Ignore the value if START bit is zero */
     if (!(value & CB_START))
@@ -89,6 +89,7 @@ static void cc112x_write(CC112xState *s, uint32_t value)
 
 static uint32_t cc112x_transfer(SSIPeripheral *dev, uint32_t value)
 {
+    printf("cc112x_transfer\n");
     CC112xState *s = CC_112X(dev);
     cc112x_write(s, value);
 	printf("cc112x_transfer %x\n",value);
@@ -114,6 +115,7 @@ static const VMStateDescription vmstate_cc112x = {
 
 static void cc112x_input_set(void *opaque, int line, int value)
 {
+    printf("cc112x_input_set\n");
     CC112xState *s = CC_112X(opaque);
 
     assert(line >= 0 && line < s->inputs);
@@ -122,12 +124,12 @@ static void cc112x_input_set(void *opaque, int line, int value)
 
 static int cc112x_init(SSIPeripheral *d, int inputs)
 {
+	printf("cc112x_init\n");
     DeviceState *dev = DEVICE(d);
     CC112xState *s = CC_112X(dev);
 
     qdev_init_gpio_out(dev, &s->interrupt, 1);
     qdev_init_gpio_in(dev, cc112x_input_set, inputs);
-	printf("cc112x_init\n");
     s->inputs = inputs;
 
     return 0;
@@ -144,6 +146,7 @@ static void cc1120_realize(SSIPeripheral *dev, Error **errp)
 
 static void cc112x_reset(DeviceState *dev)
 {
+	printf("cc112x_reset\n");
     CC112xState *s = CC_112X(dev);
     int i;
 
@@ -166,6 +169,7 @@ static Property cc1120_properties[] = {
 
 static void cc112x_class_init(ObjectClass *klass, void *data)
 {
+    printf("cc112x_class_init\n");
     SSIPeripheralClass *k = SSI_PERIPHERAL_CLASS(klass);
     DeviceClass *dc = DEVICE_CLASS(klass);
 
@@ -178,6 +182,7 @@ static void cc112x_class_init(ObjectClass *klass, void *data)
 static const TypeInfo cc112x_info = {
     .name          = TYPE_CC_112X,
     .parent        = TYPE_SSI_PERIPHERAL,
+    //.parent        = TYPE_SYS_BUS_DEVICE,
     .instance_size = sizeof(CC112xState),
     .class_init    = cc112x_class_init,
     .abstract      = true,
@@ -186,6 +191,7 @@ static const TypeInfo cc112x_info = {
 
 static void cc1120_class_init(ObjectClass *klass, void *data)
 {
+    printf("cc1120_class_init\n");
     SSIPeripheralClass *k = SSI_PERIPHERAL_CLASS(klass);
     DeviceClass *dc = DEVICE_CLASS(klass);
 

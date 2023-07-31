@@ -44,6 +44,7 @@ static const uint32_t spi_addr[] =   { 0x40013000, 0x40003800, 0x40003C00,
 #define EXTI_ADDR                      0x40013C00
 #define GPIOA_ADDR                     0x40020000
 #define IWDG_ADDR                      0x40003000
+//#define CC1120                      0x40004000
 
 #define SYSCFG_IRQ               71
 static const int usart_irq[] = { 37, 38, 39, 52, 53, 71, 82, 83 };
@@ -64,6 +65,7 @@ static void stm32f407vgtx_soc_initfn(Object *obj)
 
     printf("init syscfg\n");
     object_initialize_child(obj, "syscfg", &s->syscfg, TYPE_STM32F4XX_SYSCFG);
+    //object_initialize_child(obj, "cc112x", &s->syscfg, TYPE_CC_112X);
 
     //printf("init gpio\n");
     //object_initialize_child(obj, "gpio", &s->gpio, TYPE_STM32F4XX_GPIO);
