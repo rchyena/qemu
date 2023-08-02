@@ -22,33 +22,45 @@
  * THE SOFTWARE.
  */
 
-#ifndef HW_STM_I2S_H
-#define HW_STM_I2S_H
+#ifndef HW_STM_IWDG_H
+#define HW_STM_IWDG_H
 
 #include "hw/sysbus.h"
 #include "qom/object.h"
 
-#define STM_I2S_KR      0x00
-#define STM_I2S_PR      0x04
-#define STM_I2S_RLR     0x08
-#define STM_I2S_SR      0x0C
+#define STM_IWDG_KR      0x00
+#define STM_IWDG_PR      0x04
+#define STM_IWDG_RLR     0x08
+#define STM_IWDG_SR      0x0C
 
-#define TYPE_STM32F4XX_I2S "stm32f4xx-I2S"
-OBJECT_DECLARE_SIMPLE_TYPE(STM32F4xxI2SState, STM32F4XX_I2S)
+#define TYPE_STM32F4XX_IWDG "stm32f4xx-iwdg"
+OBJECT_DECLARE_SIMPLE_TYPE(STM32F4xxIWDGState, STM32F4XX_IWDG)
 
 #define SYSCFG_NUM_EXTICR 4
 
-struct STM32F4xxI2SState {
+struct STM32F4xxIWDGState {
     /* <private> */
     SysBusDevice parent_obj;
+
+    int reboot_enabled;         /* "Reboot" on timer expiry.  The real action
+                                * performed depends on the -watchdog-action
+                                * param passed on QEMU command line.
+                                */  
 
     /* <public> */
     MemoryRegion mmio;
 
-    uint32_t i2s_kr;
-    uint32_t i2s_pr;
-    uint32_t i2s_rlr;
-    uint32_t i2s_sr;
+    int enabled;                /* If true, watchdog is enabled. */
+    QEMUTimer *timer;           /* The actual watchdog timer. */
+    uint32_t timer_reload;      /* Values preloaded into timer1 */
+    uint32_t prescaler;
+
+    int unlock_state;
+
+    uint32_t iwdg_kr;
+    uint32_t iwdg_pr;
+    uint32_t iwdg_rlr;
+    uint32_t iwdg_sr;
 
 };
 

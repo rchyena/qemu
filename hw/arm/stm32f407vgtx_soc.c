@@ -94,8 +94,8 @@ static void stm32f407vgtx_soc_initfn(Object *obj)
     }
 
     // should there be only one like gpio?
-    printf("init i2s\n");
-    object_initialize_child(obj, "i2s", &s->i2s, TYPE_STM32F4XX_I2S);
+    printf("init iwdg\n");
+    object_initialize_child(obj, "iwdg", &s->iwdg, TYPE_STM32F4XX_IWDG);
 
     printf("init exti\n");
     object_initialize_child(obj, "exti", &s->exti, TYPE_STM32F4XX_EXTI);
