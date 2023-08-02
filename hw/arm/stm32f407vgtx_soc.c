@@ -65,6 +65,10 @@ static void stm32f407vgtx_soc_initfn(Object *obj)
     printf("init syscfg\n");
     object_initialize_child(obj, "syscfg", &s->syscfg, TYPE_STM32F4XX_SYSCFG);
 
+    // should there be only one like gpio?
+    printf("init iwdg\n");
+    object_initialize_child(obj, "iwdg", &s->iwdg, TYPE_STM32F4XX_IWDG);
+    
     //printf("init gpio\n");
     //object_initialize_child(obj, "gpio", &s->gpio, TYPE_STM32F4XX_GPIO);
     
@@ -92,10 +96,6 @@ static void stm32f407vgtx_soc_initfn(Object *obj)
     for (i = 0; i < STM_NUM_SPIS; i++) {
         object_initialize_child(obj, "spi[*]", &s->spi[i], TYPE_STM32F2XX_SPI);
     }
-
-    // should there be only one like gpio?
-    printf("init iwdg\n");
-    object_initialize_child(obj, "iwdg", &s->iwdg, TYPE_STM32F4XX_IWDG);
 
     printf("init exti\n");
     object_initialize_child(obj, "exti", &s->exti, TYPE_STM32F4XX_EXTI);
@@ -245,6 +245,23 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
         sysbus_connect_irq(busdev, 0,
                            qdev_get_gpio_in(DEVICE(&s->adc_irqs), i));
     }
+
+    printf("stm32f407vgtx_soc_realize iwdg\n");
+
+    // qdev_connect_iwdg_out(DEVICE(&s->adc_irqs), 0,
+    //                       qdev_get_iwdg_in(armv7m, ADC_IRQ));
+
+    // for (i = 0; i < STM_NUM_IWDGS; i++) {
+        dev = DEVICE(&(s->iwdg));
+        if (!sysbus_realize(SYS_BUS_DEVICE(&s->iwdg), errp)) {
+            return;
+        }
+        busdev = SYS_BUS_DEVICE(dev);
+        sysbus_mmio_map(busdev, 0, IWDG_ADDR);
+        // sysbus_connect_irq(busdev, 0,
+        //                    qdev_get_gpio_in(DEVICE(&s->adc_irqs), i));
+    // }
+
 	printf("stm32f407vgtx_soc_realize spi\n");
 
     /* SPI devices */

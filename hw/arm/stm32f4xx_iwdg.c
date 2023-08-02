@@ -19,10 +19,12 @@
  */
 
 #include "qemu/osdep.h"
-//#include "hw/arm/stm32f407vgtx_soc.h"
+#include "hw/misc/stm32f4xx_iwdg.h"
 #include "qemu/log.h"
 #include "qemu/error-report.h"
 #include "qemu/module.h"
+#include "qemu/timer.h"
+// #include "migration/vmstate.h"
 
 // struct stm32f4xx_iwdg_s {
 //     qemu_irq handler[16];
@@ -52,7 +54,7 @@ static uint32_t tim_period(STM32F4xxIWDGState *s)
      * to the real value. 
      */
     uint32_t period = (1000000 * s->prescaler) / 40;
-    return ((period * s->IWDG_RLR)); // time in nanoseconds
+    return ((period * s->iwdg_rlr)); // time in nanoseconds
 }
 
 /**
@@ -71,9 +73,10 @@ static int64_t tim_next_transition(STM32F4xxIWDGState *s, int64_t current_time)
 
 static void iwdg_disable_timer(STM32F4xxIWDGState *d)
 {
-    //iwdg_debug("timer disabled\n");
-
+    printf("one");
     timer_del(d->timer);
+    printf("two");
+
 }
 
 /**
@@ -94,17 +97,20 @@ static void iwdg_restart_timer(STM32F4xxIWDGState *d)
 
 static void stm32f4xx_iwdg_reset(DeviceState *dev)
 {
-    STM32F4XXIWDGState *s = STM32F4XX_IWDG(dev);
+    STM32F4xxIWDGState *s = STM32F4XX_IWDG(dev);
 
     printf("stm32f4xx_iwdg_reset\n");
-    iwdg_disable_timer(d);
+    printf("stm32f4xx_iwdg_reset two\n");
+    // iwdg_disable_timer(dev);
+    printf("stm32f4xx_iwdg_reset after\n");
 
-    d->reboot_enabled = 0;
-    d->enabled = 0;
-    d->prescaler = 4;
-    d->timer_reload = 0xfff;
-    d->IWDG_RLR = 0xfff;
-    d->unlock_state = 0;
+    s->reboot_enabled = 0;
+    s->enabled = 0;
+    s->prescaler = 4;
+    s->timer_reload = 0xfff;
+    s->iwdg_rlr = 0xfff;
+    s->unlock_state = 0;
+    printf("stm32f4xx_iwdg_reset done\n");
 // TODO how to reset?
 
 }
@@ -131,7 +137,7 @@ static uint64_t stm32f4xx_iwdg_read(void *opaque, hwaddr addr,
         return 0;
     }
 
-    stm32f4xx_BAD_REG(addr);
+    // stm32f4xx_BAD_REG(addr);
     return 0;
 }
 
@@ -144,29 +150,29 @@ static void stm32f4xx_iwdg_write(void *opaque, hwaddr addr,
     printf("are we ever here?");
     switch (addr) {
         case STM_IWDG_KR:
-            s->IWDG_KR = value & 0xFFFF;
-            if (s->IWDG_KR == 0xCCCC) {
+            s->iwdg_kr = value & 0xFFFF;
+            if (s->iwdg_kr == 0xCCCC) {
                 s->enabled = 1;
                 s->reboot_enabled = 1;
                 timer_mod(s->timer, tim_next_transition(s, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)));
-            } else if (s->IWDG_KR == 0xAAAA) { /* IWDG_RLR value is reloaded in the counter */
-                s->timer_reload = s->IWDG_RLR;
+            } else if (s->iwdg_kr == 0xAAAA) { /* IWDG_RLR value is reloaded in the counter */
+                s->timer_reload = s->iwdg_rlr;
                 iwdg_restart_timer(s);
-            } else if (s->IWDG_KR == 0x5555) { /* Enable write access to the IWDG_PR and IWDG_RLR registers */
+            } else if (s->iwdg_kr == 0x5555) { /* Enable write access to the IWDG_PR and IWDG_RLR registers */
                 s->unlock_state = 1;
             }
             break;
 
         case STM_IWDG_PR:
             if (s->unlock_state == 1) {
-                s->IWDG_PR = data & 0x07;
-                s->prescaler = 4 << s->IWDG_PR;
+                s->iwdg_pr = value & 0x07;
+                s->prescaler = 4 << s->iwdg_pr;
             }
             break;
 
         case STM_IWDG_RLR:
             if (s->unlock_state == 1) {
-                s->IWDG_RLR = data & 0x07FF;
+                s->iwdg_rlr = value & 0x07FF;
             }
             break;
 
@@ -174,7 +180,7 @@ static void stm32f4xx_iwdg_write(void *opaque, hwaddr addr,
             break;
 
         default:
-            stm32f4xx_BAD_REG(addr);
+            // stm32f4xx_BAD_REG(addr);
             return;
     }
 }
@@ -190,31 +196,31 @@ static const MemoryRegionOps stm32f4xx_iwdg_ops = {
     }
 };
 
-static const VMStateDescription vmstate_stm32f4xx_iwdg = {
-    .name = TYPE_STM32F4XX_IWDG,
-    .version_id = 1,
-    .minimum_version_id = 1,
-    .fields = (VMStateField[]) {
-        VMSTATE_INT32(reboot_enabled, STM32F4XXIWDGState),
-        VMSTATE_INT32(enabled, STM32F4XXIWDGState),
-        VMSTATE_TIMER(timer, STM32F4XXIWDGState),
-        VMSTATE_UINT32(timer_reload, STM32F4XXIWDGState),
-        VMSTATE_INT32(unlock_state, STM32F4XXIWDGState),
-        VMSTATE_INT32(previous_reboot_flag, STM32F4XXIWDGState),
-        VMSTATE_END_OF_LIST()
-    }
-};
+// static const VMStateDescription vmstate_stm32f4xx_iwdg = {
+//     .name = TYPE_STM32F4XX_IWDG,
+//     .version_id = 1,
+//     .minimum_version_id = 1,
+//     .fields = (VMStateField[]) {
+//         VMSTATE_INT32(reboot_enabled, STM32F4xxIWDGState),
+//         VMSTATE_INT32(enabled, STM32F4xxIWDGState),
+//         VMSTATE_TIMER(timer, STM32F4xxIWDGState),
+//         VMSTATE_UINT32(timer_reload, STM32F4xxIWDGState),
+//         VMSTATE_INT32(unlock_state, STM32F4xxIWDGState),
+//         VMSTATE_INT32(previous_reboot_flag, STM32F4xxIWDGState),
+//         VMSTATE_END_OF_LIST()
+//     }
+// };
 static void stm32f4xx_iwdg_init(Object *obj)
 {
     printf("stm32f4xx_iwdg_init\n");
-    STM32F4XXIWDGState *s = STM32F4XX_IWDG(obj);
-    DeviceState *dev = DEVICE(obj);
+    STM32F4xxIWDGState *s = STM32F4XX_IWDG(obj);
+    // DeviceState *dev = DEVICE(obj);
 
     SysBusDevice *sbd = SYS_BUS_DEVICE(obj);
 
     memory_region_init_io(&s->mmio, obj, &stm32f4xx_iwdg_ops, s,
                           TYPE_STM32F4XX_IWDG, 0x400);
-    sysbus_init_mmio(sbd, &s->iomem);
+    sysbus_init_mmio(sbd, &s->mmio);
 }
 
 static void stm32f4xx_iwdg_class_init(ObjectClass *klass, void *data)
@@ -222,13 +228,13 @@ static void stm32f4xx_iwdg_class_init(ObjectClass *klass, void *data)
     DeviceClass *dc = DEVICE_CLASS(klass);
 
     dc->reset = stm32f4xx_iwdg_reset;
-    dc->vmsd = &vmstate_stm32f4xx_iwdg;
+    // dc->vmsd = &vmstate_stm32f4xx_iwdg;
 }
 
 static const TypeInfo stm32f4xx_iwdg_info = {
     .name          = TYPE_STM32F4XX_IWDG,
     .parent        = TYPE_SYS_BUS_DEVICE, // TODO what is it
-    .instance_size = sizeof(STM32F4XXIWDGState),
+    .instance_size = sizeof(STM32F4xxIWDGState),
     .instance_init = stm32f4xx_iwdg_init,
     .class_init    = stm32f4xx_iwdg_class_init,
 };
