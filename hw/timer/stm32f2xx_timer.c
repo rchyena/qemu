@@ -46,6 +46,7 @@ static void stm32f2xx_timer_set_alarm(STM32F2XXTimerState *s, int64_t now);
 
 static void stm32f2xx_timer_interrupt(void *opaque)
 {
+    printf("stm32f2xx_timer_interrupt\n");
     STM32F2XXTimerState *s = opaque;
 
     DB_PRINT("Interrupt\n");
@@ -68,11 +69,13 @@ static void stm32f2xx_timer_interrupt(void *opaque)
 
 static inline int64_t stm32f2xx_ns_to_ticks(STM32F2XXTimerState *s, int64_t t)
 {
+    printf("stm32f2xx_timer_ns_to_ticks\n");
     return muldiv64(t, s->freq_hz, 1000000000ULL) / (s->tim_psc + 1);
 }
 
 static void stm32f2xx_timer_set_alarm(STM32F2XXTimerState *s, int64_t now)
 {
+    printf("stm32f2xx_timer_set_alarm\n");
     uint64_t ticks;
     int64_t now_ticks;
 
@@ -96,6 +99,7 @@ static void stm32f2xx_timer_set_alarm(STM32F2XXTimerState *s, int64_t now)
 
 static void stm32f2xx_timer_reset(DeviceState *dev)
 {
+    printf("stm32f2xx_timer_reset\n");
     STM32F2XXTimerState *s = STM32F2XXTIMER(dev);
     int64_t now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
 

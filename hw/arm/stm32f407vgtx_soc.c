@@ -44,7 +44,7 @@ static const uint32_t spi_addr[] =   { 0x40013000, 0x40003800, 0x40003C00,
 #define EXTI_ADDR                      0x40013C00
 #define GPIOA_ADDR                     0x40020000
 #define IWDG_ADDR                      0x40003000
-//#define CC1120                      0x40004000
+#define CC1120_ADDR                      0x40004000
 
 #define SYSCFG_IRQ               71
 static const int usart_irq[] = { 37, 38, 39, 52, 53, 71, 82, 83 };
@@ -110,6 +110,7 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
     MemoryRegion *system_memory = get_system_memory();
     DeviceState *dev, *armv7m;
     SysBusDevice *busdev;
+    SSIPeripheral *ssidev;
     Error *err = NULL;
     int i;
     /*
@@ -177,18 +178,29 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
     if (!sysbus_realize(SYS_BUS_DEVICE(&s->armv7m), errp)) {
         return;
     }
-	printf("stm32f407vgtx_soc_realize syscfg\n");
 
     /* System configuration controller */
+    /*
+	printf("stm32f407vgtx_soc_realize cc112x\n");
+    dev = DEVICE(&s->cc112x);
+    if (!sysbus_realize(SYS_BUS_DEVICE(&s->cc112x), errp)) {
+        return;
+    }
+    ssidev = SSI_PERIPHERAL(dev);
+    //busdev = SSI_PERIPHERAL(dev);
+    sysbus_mmio_map(ssidev, 0, CC1120_ADDR);
+    //sysbus_connect_irq(busdev, 0, qdev_get_gpio_in(armv7m, SYSCFG_IRQ));
+    */
+
+	printf("stm32f407vgtx_soc_realize syscfg\n");
     dev = DEVICE(&s->syscfg);
     if (!sysbus_realize(SYS_BUS_DEVICE(&s->syscfg), errp)) {
         return;
     }
     busdev = SYS_BUS_DEVICE(dev);
     sysbus_mmio_map(busdev, 0, SYSCFG_ADD);
-    sysbus_connect_irq(busdev, 0, qdev_get_gpio_in(armv7m, SYSCFG_IRQ));
-	printf("stm32f407vgtx_soc_realize uart controller\n");
 
+	printf("stm32f407vgtx_soc_realize uart controller\n");
     /* Attach UART (uses USART registers) and USART controllers */
     for (i = 0; i < STM_NUM_USARTS; i++) {
         dev = DEVICE(&(s->usart[i]));

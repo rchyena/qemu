@@ -2697,6 +2697,7 @@ static void armv7m_nvic_realize(DeviceState *dev, Error **errp)
 
 static void armv7m_nvic_instance_init(Object *obj)
 {
+    printf("armv7m_nvic_instance_init\n");
     DeviceState *dev = DEVICE(obj);
     NVICState *nvic = NVIC(obj);
     SysBusDevice *sbd = SYS_BUS_DEVICE(obj);

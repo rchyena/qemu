@@ -245,6 +245,7 @@ static const MemoryRegionOps ppb_default_ops = {
 
 static void armv7m_instance_init(Object *obj)
 {
+    printf("armv7m_init\n");
     ARMv7MState *s = ARMV7M(obj);
     int i;
 
@@ -274,6 +275,7 @@ static void armv7m_instance_init(Object *obj)
 
 static void armv7m_realize(DeviceState *dev, Error **errp)
 {
+    printf("armv7m_realize\n");
     ARMv7MState *s = ARMV7M(dev);
     SysBusDevice *sbd;
     Error *err = NULL;

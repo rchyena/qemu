@@ -227,13 +227,9 @@ static void stm32f2xx_spi_write(void *opaque, hwaddr addr,
      * If spi_write() is called AND (reg addr >= CC_EXT_ADD (0x2F00)), then first byte is a "header" value of 0x2F or 0xAF
      * 0x2F: Signals register write - write data byte into register variable. (2F + XX)
      * 0xAF: Signals register read - return data from register variable. (AF + XX)
-     * 0x73: Marcstate address (set radio_addr to indicate we're about to read marcstate).
-     * 0x25: FS_VCO2 register address (2F25)
-     * 0x15: FS_CAL2 register address (2F15)
      *
      * If spi_write() is called AND (reg addr < CC_EXT_ADD (0x2F00)), then it will NOT have a header value,
      * first byte is addr, and read/write is determined by value of address
-     * 0x00: IOCFG3 register address
      */
     switch (value) {
         case 0x2f:
@@ -244,17 +240,6 @@ static void stm32f2xx_spi_write(void *opaque, hwaddr addr,
             printf("Case af\n");
             toRead = 1;
             break;
-        /*
-        case 0x73:
-            radio_addr = value;
-            break;
-        case 0x25:
-            radio_addr = value;
-            break;
-        case 0x15:
-            radio_addr = value;
-            break;
-        */
         default:
             radio_addr = value;
             break;

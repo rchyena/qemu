@@ -16,6 +16,7 @@ static MemTxResult ras_read(void *opaque, hwaddr addr,
                             uint64_t *data, unsigned size,
                             MemTxAttrs attrs)
 {
+    printf("ras_read\n");
     if (attrs.user) {
         return MEMTX_ERROR;
     }
@@ -42,6 +43,7 @@ static MemTxResult ras_write(void *opaque, hwaddr addr,
                              uint64_t value, unsigned size,
                              MemTxAttrs attrs)
 {
+    printf("ras_write\n");
     if (attrs.user) {
         return MEMTX_ERROR;
     }
@@ -64,6 +66,7 @@ static const MemoryRegionOps ras_ops = {
 
 static void armv7m_ras_init(Object *obj)
 {
+    printf("armv7m_ras_init\n");
     SysBusDevice *sbd = SYS_BUS_DEVICE(obj);
     ARMv7MRAS *s = ARMV7M_RAS(obj);
 
