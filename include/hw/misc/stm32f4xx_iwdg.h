@@ -26,12 +26,17 @@
 #define HW_STM_IWDG_H
 
 #include "hw/sysbus.h"
+#include "hw/qdev-properties.h"
 #include "qom/object.h"
+// #include "migration/vmstate.h"
+// #include "qemu/typedefs.h"
 
 #define STM_IWDG_KR      0x00
 #define STM_IWDG_PR      0x04
 #define STM_IWDG_RLR     0x08
 #define STM_IWDG_SR      0x0C
+
+#define RCC_CSR_IWDGRSTF_BIT        29
 
 #define TYPE_STM32F4XX_IWDG "stm32f4xx-iwdg"
 OBJECT_DECLARE_SIMPLE_TYPE(STM32F4xxIWDGState, STM32F4XX_IWDG)
@@ -47,6 +52,9 @@ struct STM32F4xxIWDGState {
                                 * param passed on QEMU command line.
                                 */  
 
+    // stm32_periph_t periph;
+    // Stm32Rcc *stm32_rcc;
+
     /* <public> */
     MemoryRegion mmio;
 
@@ -56,6 +64,7 @@ struct STM32F4xxIWDGState {
     uint32_t prescaler;
 
     int unlock_state;
+    int previous_reboot_flag;
 
     uint32_t iwdg_kr;
     uint32_t iwdg_pr;

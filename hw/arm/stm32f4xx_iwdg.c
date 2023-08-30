@@ -24,16 +24,8 @@
 #include "qemu/error-report.h"
 #include "qemu/module.h"
 #include "qemu/timer.h"
-// #include "migration/vmstate.h"
+#include "sysemu/watchdog.h"
 
-// struct stm32f4xx_iwdg_s {
-//     qemu_irq handler[16];
-
-//     uint16_t kr;
-//     uint16_t pr;
-//     uint16_t rlr;
-//     uint16_t sr;
-// };
 
 /**
  * @fn uint32_t tim_period(Stm32Iwdg *s)
@@ -71,13 +63,6 @@ static int64_t tim_next_transition(STM32F4xxIWDGState *s, int64_t current_time)
     return current_time + tim_period(s);
 }
 
-static void iwdg_disable_timer(STM32F4xxIWDGState *d)
-{
-    printf("one");
-    timer_del(d->timer);
-    printf("two");
-
-}
 
 /**
  * @fn void iwdg_restart_timer(Stm32Iwdg *s)
@@ -95,13 +80,20 @@ static void iwdg_restart_timer(STM32F4xxIWDGState *d)
     timer_mod(d->timer, tim_next_transition(d, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)));
 }
 
+static void iwdg_disable_timer(STM32F4xxIWDGState *d)
+{
+    printf("one");
+    timer_del(d->timer);
+    printf("two");
+
+}
 static void stm32f4xx_iwdg_reset(DeviceState *dev)
 {
     STM32F4xxIWDGState *s = STM32F4XX_IWDG(dev);
 
     printf("stm32f4xx_iwdg_reset\n");
     printf("stm32f4xx_iwdg_reset two\n");
-    // iwdg_disable_timer(dev);
+    iwdg_disable_timer(s); // had this commented out why
     printf("stm32f4xx_iwdg_reset after\n");
 
     s->reboot_enabled = 0;
@@ -115,6 +107,20 @@ static void stm32f4xx_iwdg_reset(DeviceState *dev)
 
 }
 
+static void iwdg_timer_expired(void *vp)
+{
+    STM32F4xxIWDGState *d = vp;
+    
+    if (d->reboot_enabled) {
+    d->previous_reboot_flag = 1;
+    /* Set bit indicating reset reason (IWDG) */
+    // stm32_RCC_CSR_write((Stm32Rcc *)d->stm32_rcc, 1<<RCC_CSR_IWDGRSTF_BIT, 0);
+    /* This reboots, exits, etc */
+    watchdog_perform_action();
+    stm32f4xx_iwdg_reset((DeviceState *)d);
+    }
+}
+
 static uint64_t stm32f4xx_iwdg_read(void *opaque, hwaddr addr,
                                unsigned size)
 {
@@ -122,18 +128,18 @@ static uint64_t stm32f4xx_iwdg_read(void *opaque, hwaddr addr,
 
     printf("do we ever get here?");
     switch (addr) {
-    case 0x00: 
+    case STM_IWDG_KR: 
         return 0;
 
-    case 0x04:
+    case STM_IWDG_PR:
         // Here is where the counter might be updated?
         printf("we're in iwdg");
         return s->iwdg_pr;
 
-    case 0x08:
+    case STM_IWDG_RLR:
         return s->iwdg_rlr;
 
-    case 0x0c:
+    case STM_IWDG_SR:
         return 0;
     }
 
@@ -179,9 +185,6 @@ static void stm32f4xx_iwdg_write(void *opaque, hwaddr addr,
         case STM_IWDG_SR:
             break;
 
-        default:
-            // stm32f4xx_BAD_REG(addr);
-            return;
     }
 }
 
@@ -198,7 +201,7 @@ static const MemoryRegionOps stm32f4xx_iwdg_ops = {
 
 // static const VMStateDescription vmstate_stm32f4xx_iwdg = {
 //     .name = TYPE_STM32F4XX_IWDG,
-//     .version_id = 1,
+//     .version_id = 10000,
 //     .minimum_version_id = 1,
 //     .fields = (VMStateField[]) {
 //         VMSTATE_INT32(reboot_enabled, STM32F4xxIWDGState),
@@ -210,25 +213,43 @@ static const MemoryRegionOps stm32f4xx_iwdg_ops = {
 //         VMSTATE_END_OF_LIST()
 //     }
 // };
+
 static void stm32f4xx_iwdg_init(Object *obj)
 {
     printf("stm32f4xx_iwdg_init\n");
     STM32F4xxIWDGState *s = STM32F4XX_IWDG(obj);
-    // DeviceState *dev = DEVICE(obj);
+    // s->stm32_rcc = (Stm32Rcc *)s->stm32_rcc_prop;
+    s->timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, iwdg_timer_expired, s);
+    s->previous_reboot_flag = 0;
 
     SysBusDevice *sbd = SYS_BUS_DEVICE(obj);
 
     memory_region_init_io(&s->mmio, obj, &stm32f4xx_iwdg_ops, s,
-                          TYPE_STM32F4XX_IWDG, 0x400);
+                          TYPE_STM32F4XX_IWDG, 0x3FF);
     sysbus_init_mmio(sbd, &s->mmio);
 }
+
+static WatchdogTimerModel model = {
+    .wdt_name = TYPE_STM32F4XX_IWDG,
+    .wdt_description = "Independent watchdog",
+};
+
+static Property stm32f4xx_iwdg_properties[] = {
+    // DEFINE_PROP_PERIPH_T("periph", STM32F4xxIWDGState, periph, STM32_PERIPH_UNDEFINED),
+    // DEFINE_PROP_PTR("stm32_rcc", STM32F4xxIWDGState, stm32_rcc_prop),
+    DEFINE_PROP_END_OF_LIST(),
+};
+
 
 static void stm32f4xx_iwdg_class_init(ObjectClass *klass, void *data)
 {
     DeviceClass *dc = DEVICE_CLASS(klass);
-
+    // SysBusDeviceClass *sc = SYS_BUS_DEVICE_CLASS(klass);    
+    
+    // sc->init = stm32f4xx_iwdg_init;
     dc->reset = stm32f4xx_iwdg_reset;
     // dc->vmsd = &vmstate_stm32f4xx_iwdg;
+    dc->props_ = stm32f4xx_iwdg_properties;
 }
 
 static const TypeInfo stm32f4xx_iwdg_info = {
@@ -241,6 +262,7 @@ static const TypeInfo stm32f4xx_iwdg_info = {
 
 static void stm32f4xx_iwdg_register_types(void)
 {
+    watchdog_add_model(&model);
     type_register_static(&stm32f4xx_iwdg_info);
 }
 
