@@ -20,11 +20,28 @@
 
 #include "qemu/osdep.h"
 #include "hw/misc/stm32f4xx_iwdg.h"
+#include "migration/vmstate.h"
 #include "qemu/log.h"
 #include "qemu/error-report.h"
 #include "qemu/module.h"
 #include "qemu/timer.h"
 #include "sysemu/watchdog.h"
+
+const char *iwdg_addrs[] = {
+    "kr",
+    "0x01",
+    "0x02",
+    "0x03",
+    "pr",
+    "0x05",
+    "0x06",
+    "0x07",
+    "rlr",
+    "0x09",
+    "0xa",
+    "0xb",
+    "sr"
+};
 
 
 /**
@@ -38,6 +55,7 @@
 */    
 static uint32_t tim_period(STM32F4xxIWDGState *s)
 {   
+    printf("tim_period\n");
     /* LSI frequency = 37~40kHz 
      * LSI frequency can range from 37kHz to 40kHz.
      * This frequency can be measured on the board, through the Timer10.
@@ -60,6 +78,7 @@ static uint32_t tim_period(STM32F4xxIWDGState *s)
 */
 static int64_t tim_next_transition(STM32F4xxIWDGState *s, int64_t current_time)
 {   
+    printf("tim_next_transition\n");
     return current_time + tim_period(s);
 }
 
@@ -74,27 +93,41 @@ static int64_t tim_next_transition(STM32F4xxIWDGState *s, int64_t current_time)
 */
 static void iwdg_restart_timer(STM32F4xxIWDGState *d)
 {
+    printf("iwdg_restart_timer\n");
     if (!d->enabled)
         return;
     
     timer_mod(d->timer, tim_next_transition(d, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)));
+    printf("Updating expiration time of timer to %d\n",tim_next_transition(d, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)));
 }
 
+/**
+ * @fn void iwdg_disable_timer(Stm32Iwdg *s)
+ * @brief Disable watchdog timer
+ * @param s pointer to struct Stm32Iwdg
+ * @return none
+ * @remarks This is called when the guest disables the watchdog.
+*/
 static void iwdg_disable_timer(STM32F4xxIWDGState *d)
 {
-    printf("one");
+    printf("iwdg_disable_timer\n");
     timer_del(d->timer);
-    printf("two");
 
 }
+
+/**
+ * @fn void iwdg_timer_expired(void *vp)
+ * @brief Reset function
+ * @param vp pointer to void
+ * @return none
+ * @remarks This function is called when the watchdog expires.
+*/
 static void stm32f4xx_iwdg_reset(DeviceState *dev)
 {
     STM32F4xxIWDGState *s = STM32F4XX_IWDG(dev);
 
     printf("stm32f4xx_iwdg_reset\n");
-    printf("stm32f4xx_iwdg_reset two\n");
-    iwdg_disable_timer(s); // had this commented out why
-    printf("stm32f4xx_iwdg_reset after\n");
+    iwdg_disable_timer(s);
 
     s->reboot_enabled = 0;
     s->enabled = 0;
@@ -102,38 +135,42 @@ static void stm32f4xx_iwdg_reset(DeviceState *dev)
     s->timer_reload = 0xfff;
     s->iwdg_rlr = 0xfff;
     s->unlock_state = 0;
-    printf("stm32f4xx_iwdg_reset done\n");
-// TODO how to reset?
-
 }
 
+/**
+* @fn void iwdg_timer_expired(void *vp)
+* @brief Reset function
+* @param vp pointer to void
+* @return none
+* @remarks This function is called when the watchdog expires.
+*/
 static void iwdg_timer_expired(void *vp)
 {
+    printf("iwdg_timer_expired\n");
     STM32F4xxIWDGState *d = vp;
     
     if (d->reboot_enabled) {
-    d->previous_reboot_flag = 1;
-    /* Set bit indicating reset reason (IWDG) */
-    // stm32_RCC_CSR_write((Stm32Rcc *)d->stm32_rcc, 1<<RCC_CSR_IWDGRSTF_BIT, 0);
-    /* This reboots, exits, etc */
-    watchdog_perform_action();
-    stm32f4xx_iwdg_reset((DeviceState *)d);
+        d->previous_reboot_flag = 1;
+        /* Set bit indicating reset reason (IWDG) */
+        // stm32_RCC_CSR_write((Stm32Rcc *)d->stm32_rcc, 1<<RCC_CSR_IWDGRSTF_BIT, 0);
+        /* This reboots, exits, etc */
+        watchdog_perform_action();
+        stm32f4xx_iwdg_reset((DeviceState *)d);
     }
 }
 
 static uint64_t stm32f4xx_iwdg_read(void *opaque, hwaddr addr,
                                unsigned size)
 {
+    printf("stm32f2xx_iwdg_read: 0x%" HWADDR_PRIx " %s\n", addr, iwdg_addrs[addr]);
     struct STM32F4xxIWDGState *s = (struct STM32F4xxIWDGState *) opaque;
 
-    printf("do we ever get here?");
     switch (addr) {
     case STM_IWDG_KR: 
         return 0;
 
     case STM_IWDG_PR:
         // Here is where the counter might be updated?
-        printf("we're in iwdg");
         return s->iwdg_pr;
 
     case STM_IWDG_RLR:
@@ -150,23 +187,26 @@ static uint64_t stm32f4xx_iwdg_read(void *opaque, hwaddr addr,
 static void stm32f4xx_iwdg_write(void *opaque, hwaddr addr,
                             uint64_t value, unsigned size)
 {
+    printf("stm32f2xx_iwdg_write: 0x%" HWADDR_PRIx " %s, Value: 0x%x\n", addr, iwdg_addrs[addr], value);
+    printf("Entering: kr: %llx, pr: %llx, rlr: %llx, sr: %llx\n");
     struct STM32F4xxIWDGState *s = (struct STM32F4xxIWDGState *) opaque;
 
-    // here is where we are writing - register changes probably happen here
-    printf("are we ever here?");
     switch (addr) {
         case STM_IWDG_KR:
             s->iwdg_kr = value & 0xFFFF;
             if (s->iwdg_kr == 0xCCCC) {
                 s->enabled = 1;
                 s->reboot_enabled = 1;
+                // Looks to be where watchdog counter is extended to tim_next_transition
                 timer_mod(s->timer, tim_next_transition(s, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)));
+                printf("Updating expiration time of timer to %d\n",tim_next_transition(s, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)));
             } else if (s->iwdg_kr == 0xAAAA) { /* IWDG_RLR value is reloaded in the counter */
                 s->timer_reload = s->iwdg_rlr;
                 iwdg_restart_timer(s);
             } else if (s->iwdg_kr == 0x5555) { /* Enable write access to the IWDG_PR and IWDG_RLR registers */
                 s->unlock_state = 1;
             }
+            printf("Changed s->iwdg_kr to: %llx\n", s->iwdg_kr);
             break;
 
         case STM_IWDG_PR:
@@ -174,12 +214,14 @@ static void stm32f4xx_iwdg_write(void *opaque, hwaddr addr,
                 s->iwdg_pr = value & 0x07;
                 s->prescaler = 4 << s->iwdg_pr;
             }
+            printf("Changed s->iwdg_pr to: %llx\n", s->iwdg_pr);
             break;
 
         case STM_IWDG_RLR:
             if (s->unlock_state == 1) {
                 s->iwdg_rlr = value & 0x07FF;
             }
+            printf("Changed s->iwdg_rlr to: %llx\n", s->iwdg_rlr);
             break;
 
         case STM_IWDG_SR:
@@ -199,33 +241,49 @@ static const MemoryRegionOps stm32f4xx_iwdg_ops = {
     }
 };
 
-// static const VMStateDescription vmstate_stm32f4xx_iwdg = {
-//     .name = TYPE_STM32F4XX_IWDG,
-//     .version_id = 10000,
-//     .minimum_version_id = 1,
-//     .fields = (VMStateField[]) {
-//         VMSTATE_INT32(reboot_enabled, STM32F4xxIWDGState),
-//         VMSTATE_INT32(enabled, STM32F4xxIWDGState),
-//         VMSTATE_TIMER(timer, STM32F4xxIWDGState),
-//         VMSTATE_UINT32(timer_reload, STM32F4xxIWDGState),
-//         VMSTATE_INT32(unlock_state, STM32F4xxIWDGState),
-//         VMSTATE_INT32(previous_reboot_flag, STM32F4xxIWDGState),
-//         VMSTATE_END_OF_LIST()
-//     }
-// };
+/* With this VMSD's introduction, version_id/minimum_version_id were
+ * erroneously set to sizeof(Stm32Iwdg), causing a somewhat random
+ * version_id to be set for every build. This eventually broke
+ * migration.
+ *
+ * To correct this without breaking old->new migration for older
+ * versions of QEMU, we've set version_id to a value high enough
+ * to exceed all past values of sizeof(Stm32Iwdg) across various
+ * build environments, and have reset minimum_version_id to 1,
+ * since this VMSD has never changed and thus can accept all past
+ * versions.
+ *
+ * For future changes we can treat these values as we normally would.
+ */
+static const VMStateDescription vmstate_stm32f4xx_iwdg = {
+    .name = TYPE_STM32F4XX_IWDG,
+    .version_id = 10000,
+    .minimum_version_id = 1,
+    .fields = (VMStateField[]) {
+        VMSTATE_INT32(reboot_enabled, STM32F4xxIWDGState),
+        VMSTATE_INT32(enabled, STM32F4xxIWDGState),
+        //VMSTATE_TIMER(timer, STM32F4xxIWDGState),
+        VMSTATE_UINT32(timer_reload, STM32F4xxIWDGState),
+        VMSTATE_INT32(unlock_state, STM32F4xxIWDGState),
+        VMSTATE_INT32(previous_reboot_flag, STM32F4xxIWDGState),
+        VMSTATE_END_OF_LIST()
+    }
+};
 
 static void stm32f4xx_iwdg_init(Object *obj)
 {
     printf("stm32f4xx_iwdg_init\n");
     STM32F4xxIWDGState *s = STM32F4XX_IWDG(obj);
     // s->stm32_rcc = (Stm32Rcc *)s->stm32_rcc_prop;
+    // Seems to be where counter is linked to expire function (triggering reset)
+    // Creates a nanosecond timer using qemu virtual clock that calls expired when it hits 0
     s->timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, iwdg_timer_expired, s);
     s->previous_reboot_flag = 0;
 
     SysBusDevice *sbd = SYS_BUS_DEVICE(obj);
 
     memory_region_init_io(&s->mmio, obj, &stm32f4xx_iwdg_ops, s,
-                          TYPE_STM32F4XX_IWDG, 0x3FF);
+                          TYPE_STM32F4XX_IWDG, 0x400);
     sysbus_init_mmio(sbd, &s->mmio);
 }
 
@@ -235,7 +293,7 @@ static WatchdogTimerModel model = {
 };
 
 static Property stm32f4xx_iwdg_properties[] = {
-    // DEFINE_PROP_PERIPH_T("periph", STM32F4xxIWDGState, periph, STM32_PERIPH_UNDEFINED),
+    //DEFINE_PROP_PERIPH_T("periph", STM32F4xxIWDGState, periph, STM32_PERIPH_UNDEFINED),
     // DEFINE_PROP_PTR("stm32_rcc", STM32F4xxIWDGState, stm32_rcc_prop),
     DEFINE_PROP_END_OF_LIST(),
 };
@@ -243,12 +301,13 @@ static Property stm32f4xx_iwdg_properties[] = {
 
 static void stm32f4xx_iwdg_class_init(ObjectClass *klass, void *data)
 {
+    printf("iwdg_class_init\n");
     DeviceClass *dc = DEVICE_CLASS(klass);
-    // SysBusDeviceClass *sc = SYS_BUS_DEVICE_CLASS(klass);    
+    //SysBusDeviceClass *sc = SYS_BUS_DEVICE_CLASS(klass);    
     
     // sc->init = stm32f4xx_iwdg_init;
     dc->reset = stm32f4xx_iwdg_reset;
-    // dc->vmsd = &vmstate_stm32f4xx_iwdg;
+    dc->vmsd = &vmstate_stm32f4xx_iwdg;
     dc->props_ = stm32f4xx_iwdg_properties;
 }
 
