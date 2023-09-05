@@ -358,6 +358,7 @@ void timer_init_full(QEMUTimer *ts,
                      int scale, int attributes,
                      QEMUTimerCB *cb, void *opaque)
 {
+    //printf("timer_init_full\n");
     if (!timer_list_group) {
         timer_list_group = &main_loop_tlg;
     }
@@ -371,12 +372,14 @@ void timer_init_full(QEMUTimer *ts,
 
 void timer_deinit(QEMUTimer *ts)
 {
+    //printf("timer_deinit\n");
     assert(ts->expire_time == -1);
     ts->timer_list = NULL;
 }
 
 static void timer_del_locked(QEMUTimerList *timer_list, QEMUTimer *ts)
 {
+    //printf("timer_del_locked\n");
     QEMUTimer **pt, *t;
 
     ts->expire_time = -1;
@@ -396,6 +399,7 @@ static void timer_del_locked(QEMUTimerList *timer_list, QEMUTimer *ts)
 static bool timer_mod_ns_locked(QEMUTimerList *timer_list,
                                 QEMUTimer *ts, int64_t expire_time)
 {
+    //printf("timer_mod_ns_locked\n");
     QEMUTimer **pt, *t;
 
     /* add the timer in the sorted list */
@@ -416,6 +420,7 @@ static bool timer_mod_ns_locked(QEMUTimerList *timer_list,
 
 static void timerlist_rearm(QEMUTimerList *timer_list)
 {
+    //printf("timerlist_rearm\n");
     /* Interrupt execution to force deadline recalculation.  */
     if (icount_enabled() && timer_list->clock->type == QEMU_CLOCK_VIRTUAL) {
         icount_start_warp_timer();
@@ -426,6 +431,7 @@ static void timerlist_rearm(QEMUTimerList *timer_list)
 /* stop a timer, but do not dealloc it */
 void timer_del(QEMUTimer *ts)
 {
+    //printf("timer_del\n");
     QEMUTimerList *timer_list = ts->timer_list;
 
     if (timer_list) {
@@ -439,6 +445,7 @@ void timer_del(QEMUTimer *ts)
    >= expire_time. The corresponding callback will be called. */
 void timer_mod_ns(QEMUTimer *ts, int64_t expire_time)
 {
+    //printf("timer_mod_ns expire_time: %lld\n", expire_time);
     QEMUTimerList *timer_list = ts->timer_list;
     bool rearm;
 
@@ -457,6 +464,7 @@ void timer_mod_ns(QEMUTimer *ts, int64_t expire_time)
    The corresponding callback will be called. */
 void timer_mod_anticipate_ns(QEMUTimer *ts, int64_t expire_time)
 {
+    //printf("timer_mod_anticipate_ns\n");
     QEMUTimerList *timer_list = ts->timer_list;
     bool rearm;
 
@@ -477,11 +485,13 @@ void timer_mod_anticipate_ns(QEMUTimer *ts, int64_t expire_time)
 
 void timer_mod(QEMUTimer *ts, int64_t expire_time)
 {
+    //printf("timer_mod\n");
     timer_mod_ns(ts, expire_time * ts->scale);
 }
 
 void timer_mod_anticipate(QEMUTimer *ts, int64_t expire_time)
 {
+    //printf("timer_mod_anticipate\n");
     timer_mod_anticipate_ns(ts, expire_time * ts->scale);
 }
 

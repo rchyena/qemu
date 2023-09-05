@@ -41,6 +41,7 @@ static unsigned exit_phase_in_progress;
 
 void resettable_reset(Object *obj, ResetType type)
 {
+    printf("resettable_reset\n");
     trace_resettable_reset(obj, type);
     resettable_assert_reset(obj, type);
     resettable_release_reset(obj, type);
@@ -48,6 +49,7 @@ void resettable_reset(Object *obj, ResetType type)
 
 void resettable_assert_reset(Object *obj, ResetType type)
 {
+    printf("resettable_assert_reset\n");
     /* TODO: change this assert when adding support for other reset types */
     assert(type == RESET_TYPE_COLD);
     trace_resettable_reset_assert_begin(obj, type);
@@ -78,6 +80,7 @@ void resettable_release_reset(Object *obj, ResetType type)
 
 bool resettable_is_in_reset(Object *obj)
 {
+    printf("resettable_is_in_reset\n");
     ResettableClass *rc = RESETTABLE_GET_CLASS(obj);
     ResettableState *s = rc->get_state(obj);
 
@@ -113,6 +116,7 @@ static ResettableTrFunction resettable_get_tr_func(ResettableClass *rc,
 
 static void resettable_phase_enter(Object *obj, void *opaque, ResetType type)
 {
+    //printf("resettable_phase_enter\n");
     ResettableClass *rc = RESETTABLE_GET_CLASS(obj);
     ResettableState *s = rc->get_state(obj);
     const char *obj_typename = object_get_typename(obj);

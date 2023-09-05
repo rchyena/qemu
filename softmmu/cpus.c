@@ -636,6 +636,7 @@ void qemu_init_vcpu(CPUState *cpu)
 
 void cpu_stop_current(void)
 {
+    printf("cpu_stop_current\n");
     if (current_cpu) {
         current_cpu->stop = true;
         cpu_exit(current_cpu);

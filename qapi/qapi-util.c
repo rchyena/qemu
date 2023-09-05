@@ -60,6 +60,7 @@ bool compat_policy_input_ok(unsigned special_features,
 
 const char *qapi_enum_lookup(const QEnumLookup *lookup, int val)
 {
+    printf("qapi_enum_lookup\n");
     assert(val >= 0 && val < lookup->size);
 
     return lookup->array[val];

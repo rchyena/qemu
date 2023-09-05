@@ -55,7 +55,7 @@ const char *iwdg_addrs[] = {
 */    
 static uint32_t tim_period(STM32F4xxIWDGState *s)
 {   
-    printf("tim_period\n");
+    printf("tim_period: prescaler %lu\n", s->prescaler);
     /* LSI frequency = 37~40kHz 
      * LSI frequency can range from 37kHz to 40kHz.
      * This frequency can be measured on the board, through the Timer10.
@@ -64,6 +64,8 @@ static uint32_t tim_period(STM32F4xxIWDGState *s)
      * to the real value. 
      */
     uint32_t period = (1000000 * s->prescaler) / 40;
+    printf("Multiplying period %lu by s->iwdg_rlr %lu to get period of %lu\n", period, s->iwdg_rlr, period * s->iwdg_rlr);
+    //return 215898112000;
     return ((period * s->iwdg_rlr)); // time in nanoseconds
 }
 
@@ -78,7 +80,7 @@ static uint32_t tim_period(STM32F4xxIWDGState *s)
 */
 static int64_t tim_next_transition(STM32F4xxIWDGState *s, int64_t current_time)
 {   
-    printf("tim_next_transition\n");
+    printf("tim_next_transition current_time %lld + period %lu\n", current_time, tim_period(s));
     return current_time + tim_period(s);
 }
 
@@ -93,12 +95,12 @@ static int64_t tim_next_transition(STM32F4xxIWDGState *s, int64_t current_time)
 */
 static void iwdg_restart_timer(STM32F4xxIWDGState *d)
 {
-    printf("iwdg_restart_timer\n");
+    printf("iwdg_restart_timer at time %lld\n", qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL));
     if (!d->enabled)
         return;
     
     timer_mod(d->timer, tim_next_transition(d, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)));
-    printf("Updating expiration time of timer to %d\n",tim_next_transition(d, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)));
+    printf("Updating expiration time of timer to %lld\n",tim_next_transition(d, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)));
 }
 
 /**
@@ -146,7 +148,7 @@ static void stm32f4xx_iwdg_reset(DeviceState *dev)
 */
 static void iwdg_timer_expired(void *vp)
 {
-    printf("iwdg_timer_expired\n");
+    printf("iwdg_timer_expired at time %lld\n", qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL));
     STM32F4xxIWDGState *d = vp;
     
     if (d->reboot_enabled) {
@@ -154,7 +156,7 @@ static void iwdg_timer_expired(void *vp)
         /* Set bit indicating reset reason (IWDG) */
         // stm32_RCC_CSR_write((Stm32Rcc *)d->stm32_rcc, 1<<RCC_CSR_IWDGRSTF_BIT, 0);
         /* This reboots, exits, etc */
-        watchdog_perform_action();
+        //watchdog_perform_action();
         stm32f4xx_iwdg_reset((DeviceState *)d);
     }
 }
@@ -188,8 +190,8 @@ static void stm32f4xx_iwdg_write(void *opaque, hwaddr addr,
                             uint64_t value, unsigned size)
 {
     printf("stm32f2xx_iwdg_write: 0x%" HWADDR_PRIx " %s, Value: 0x%x\n", addr, iwdg_addrs[addr], value);
-    printf("Entering: kr: %llx, pr: %llx, rlr: %llx, sr: %llx\n");
     struct STM32F4xxIWDGState *s = (struct STM32F4xxIWDGState *) opaque;
+    printf("Entering: kr: %u, pr: %u, rlr: %u, sr: %u\n", s->iwdg_kr, s->iwdg_pr, s->iwdg_rlr, s->iwdg_sr);
 
     switch (addr) {
         case STM_IWDG_KR:
@@ -199,14 +201,15 @@ static void stm32f4xx_iwdg_write(void *opaque, hwaddr addr,
                 s->reboot_enabled = 1;
                 // Looks to be where watchdog counter is extended to tim_next_transition
                 timer_mod(s->timer, tim_next_transition(s, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)));
-                printf("Updating expiration time of timer to %d\n",tim_next_transition(s, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)));
+                printf("Updating expiration time of timer to %lld\n",tim_next_transition(s, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)));
             } else if (s->iwdg_kr == 0xAAAA) { /* IWDG_RLR value is reloaded in the counter */
+                printf("refresh triggered\n");
                 s->timer_reload = s->iwdg_rlr;
                 iwdg_restart_timer(s);
             } else if (s->iwdg_kr == 0x5555) { /* Enable write access to the IWDG_PR and IWDG_RLR registers */
                 s->unlock_state = 1;
             }
-            printf("Changed s->iwdg_kr to: %llx\n", s->iwdg_kr);
+            printf("Changed s->iwdg_kr to: %u\n", s->iwdg_kr);
             break;
 
         case STM_IWDG_PR:
@@ -214,14 +217,14 @@ static void stm32f4xx_iwdg_write(void *opaque, hwaddr addr,
                 s->iwdg_pr = value & 0x07;
                 s->prescaler = 4 << s->iwdg_pr;
             }
-            printf("Changed s->iwdg_pr to: %llx\n", s->iwdg_pr);
+            printf("Changed s->iwdg_pr to: %u\n", s->iwdg_pr);
             break;
 
         case STM_IWDG_RLR:
             if (s->unlock_state == 1) {
                 s->iwdg_rlr = value & 0x07FF;
             }
-            printf("Changed s->iwdg_rlr to: %llx\n", s->iwdg_rlr);
+            printf("Changed s->iwdg_rlr to: %u\n", s->iwdg_rlr);
             break;
 
         case STM_IWDG_SR:

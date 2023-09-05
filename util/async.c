@@ -67,6 +67,7 @@ struct QEMUBH {
 /* Called concurrently from any thread */
 static void aio_bh_enqueue(QEMUBH *bh, unsigned new_flags)
 {
+    //printf("invoking callback (concurrently from any thread)\n");
     AioContext *ctx = bh->ctx;
     unsigned old_flags;
 
@@ -79,6 +80,7 @@ static void aio_bh_enqueue(QEMUBH *bh, unsigned new_flags)
      */
     old_flags = qatomic_fetch_or(&bh->flags, BH_PENDING | new_flags);
     if (!(old_flags & BH_PENDING)) {
+        //printf("old_flags & BH_PENDING\n");
         QSLIST_INSERT_HEAD_ATOMIC(&ctx->bh_list, bh, next);
     }
 
@@ -183,6 +185,7 @@ void qemu_bh_schedule_idle(QEMUBH *bh)
 
 void qemu_bh_schedule(QEMUBH *bh)
 {
+    //printf("qemu_bh_schedule\n");
     aio_bh_enqueue(bh, BH_SCHEDULED);
 }
 
@@ -436,6 +439,7 @@ LuringState *aio_get_linux_io_uring(AioContext *ctx)
 
 void aio_notify(AioContext *ctx)
 {
+    //printf("aio_notify\n");
     /*
      * Write e.g. bh->flags before writing ctx->notified.  Pairs with smp_mb in
      * aio_notify_accept.

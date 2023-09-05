@@ -360,6 +360,7 @@ ShutdownCause qemu_shutdown_requested_get(void)
 
 ShutdownCause qemu_reset_requested_get(void)
 {
+    printf("qemu_reset_requestd_get");
     return reset_requested;
 }
 
@@ -526,13 +527,17 @@ void qemu_system_guest_crashloaded(GuestPanicInformation *info)
 
 void qemu_system_reset_request(ShutdownCause reason)
 {
+    printf("qemu_system_reset_request: reason %d\n", reason);
     if (reboot_action == REBOOT_ACTION_SHUTDOWN &&
         reason != SHUTDOWN_CAUSE_SUBSYSTEM_RESET) {
+        printf("shutdown is not because subsystem reset\n");
         shutdown_requested = reason;
     } else if (!cpus_are_resettable()) {
+        printf("cpus are not resettable, terminating\n");
         error_report("cpus are not resettable, terminating");
         shutdown_requested = reason;
     } else {
+        printf("reset requested and cpus are resettable\n");
         reset_requested = reason;
     }
     cpu_stop_current();

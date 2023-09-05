@@ -101,17 +101,21 @@ bool sysbus_has_irq(SysBusDevice *dev, int n)
 
 bool sysbus_is_irq_connected(SysBusDevice *dev, int n)
 {
+    //printf("sysbus_is_irq_connected\n");
     return !!sysbus_get_connected_irq(dev, n);
 }
 
 qemu_irq sysbus_get_connected_irq(SysBusDevice *dev, int n)
 {
+    //printf("sysbus_get_connected_irq\n");
     DeviceState *d = DEVICE(dev);
     return qdev_get_gpio_out_connector(d, SYSBUS_DEVICE_GPIO_IRQ, n);
 }
 
 void sysbus_connect_irq(SysBusDevice *dev, int n, qemu_irq irq)
 {
+    //printf("sysbus_connect_irq\n");
+    DeviceState *d = DEVICE(dev);
     SysBusDeviceClass *sbd = SYS_BUS_DEVICE_GET_CLASS(dev);
 
     qdev_connect_gpio_out_named(DEVICE(dev), SYSBUS_DEVICE_GPIO_IRQ, n, irq);
@@ -178,12 +182,14 @@ void sysbus_mmio_map_overlap(SysBusDevice *dev, int n, hwaddr addr,
 /* Request an IRQ source.  The actual IRQ object may be populated later.  */
 void sysbus_init_irq(SysBusDevice *dev, qemu_irq *p)
 {
+    //printf("sysbus_init_irq\n");
     qdev_init_gpio_out_named(DEVICE(dev), p, SYSBUS_DEVICE_GPIO_IRQ, 1);
 }
 
 /* Pass IRQs from a target device.  */
 void sysbus_pass_irq(SysBusDevice *dev, SysBusDevice *target)
 {
+    //printf("sysbus_pass_irq\n");
     qdev_pass_gpios(DEVICE(target), DEVICE(dev), SYSBUS_DEVICE_GPIO_IRQ);
 }
 

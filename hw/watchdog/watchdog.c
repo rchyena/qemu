@@ -46,6 +46,7 @@ void watchdog_add_model(WatchdogTimerModel *model)
  */
 int select_watchdog(const char *p)
 {
+    printf("select_watchdog\n");
     WatchdogTimerModel *model;
     QemuOpts *opts;
 
@@ -78,6 +79,7 @@ int select_watchdog(const char *p)
 
 WatchdogAction get_watchdog_action(void)
 {
+    printf("get_watchdog_action\n");
     return watchdog_action;
 }
 
@@ -86,18 +88,22 @@ WatchdogAction get_watchdog_action(void)
  */
 void watchdog_perform_action(void)
 {
+    printf("watchdog_perform_action\n");
     switch (watchdog_action) {
     case WATCHDOG_ACTION_RESET:     /* same as 'system_reset' in monitor */
+        printf("triggering reset\n");
         qapi_event_send_watchdog(WATCHDOG_ACTION_RESET);
         qemu_system_reset_request(SHUTDOWN_CAUSE_GUEST_RESET);
         break;
 
     case WATCHDOG_ACTION_SHUTDOWN:  /* same as 'system_powerdown' in monitor */
+        printf("triggering shutdown\n");
         qapi_event_send_watchdog(WATCHDOG_ACTION_SHUTDOWN);
         qemu_system_powerdown_request();
         break;
 
     case WATCHDOG_ACTION_POWEROFF:  /* same as 'quit' command in monitor */
+        printf("triggering poweroff\n");
         qapi_event_send_watchdog(WATCHDOG_ACTION_POWEROFF);
         exit(0);
 
@@ -105,31 +111,37 @@ void watchdog_perform_action(void)
         /* In a timer callback, when vm_stop calls qemu_clock_enable
          * you would get a deadlock.  Bypass the problem.
          */
+        printf("triggering pause\n");
         qemu_system_vmstop_request_prepare();
         qapi_event_send_watchdog(WATCHDOG_ACTION_PAUSE);
         qemu_system_vmstop_request(RUN_STATE_WATCHDOG);
         break;
 
     case WATCHDOG_ACTION_DEBUG:
+        printf("triggering debug\n");
         qapi_event_send_watchdog(WATCHDOG_ACTION_DEBUG);
         fprintf(stderr, "watchdog: timer fired\n");
         break;
 
     case WATCHDOG_ACTION_NONE:
+        printf("triggering none\n");
         qapi_event_send_watchdog(WATCHDOG_ACTION_NONE);
         break;
 
     case WATCHDOG_ACTION_INJECT_NMI:
+        printf("triggering inject nmi\n");
         qapi_event_send_watchdog(WATCHDOG_ACTION_INJECT_NMI);
         nmi_monitor_handle(0, NULL);
         break;
 
     default:
+        printf("hitting default case in watchdog action\n");
         assert(0);
     }
 }
 
 void qmp_watchdog_set_action(WatchdogAction action, Error **errp)
 {
+    printf("qmp_watchdog_set_aciton\n");
     watchdog_action = action;
 }

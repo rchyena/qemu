@@ -559,6 +559,7 @@ static inline QEMUTimer *timer_new(QEMUClockType type, int scale,
 static inline QEMUTimer *timer_new_ns(QEMUClockType type, QEMUTimerCB *cb,
                                       void *opaque)
 {
+    printf("timer_new_ns: type %d\n", type);
     return timer_new(type, SCALE_NS, cb, opaque);
 }
 
