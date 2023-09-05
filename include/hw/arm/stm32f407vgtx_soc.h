@@ -36,6 +36,7 @@
 #include "hw/arm/armv7m.h"
 #include "hw/ssi/cc112x.h"
 #include "qom/object.h"
+#include "hw/misc/stm32f4xx_iwdg.h"
 
 #define TYPE_STM32F407VGTX_SOC "stm32f407vgtx-soc"
 OBJECT_DECLARE_SIMPLE_TYPE(STM32F407VGTXState, STM32F407VGTX_SOC)
@@ -44,6 +45,7 @@ OBJECT_DECLARE_SIMPLE_TYPE(STM32F407VGTXState, STM32F407VGTX_SOC)
 #define STM_NUM_TIMERS 4
 #define STM_NUM_ADCS 6
 #define STM_NUM_SPIS 6
+#define STM_NUM_IWDGS 4
 
 #define FLASH_BASE_ADDRESS 0x08000000
 #define FLASH_SIZE (1024 * 1024)
@@ -62,6 +64,7 @@ struct STM32F407VGTXState {
     STM32F4xxSyscfgState syscfg;
     STM32F4xxGpioState gpio;
     STM32F4xxExtiState exti;
+    STM32F4xxIWDGState iwdg;
     CC112xState cc112x;
 
     STM32F2XXUsartState usart[STM_NUM_USARTS];
