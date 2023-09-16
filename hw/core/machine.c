@@ -1206,6 +1206,7 @@ void qemu_remove_machine_init_done_notifier(Notifier *notify)
 
 void qdev_machine_creation_done(void)
 {
+    printf("qdev_machine_creation_done\n");
     cpu_synchronize_all_post_init();
 
     if (current_machine->boot_once) {

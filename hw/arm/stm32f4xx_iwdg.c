@@ -52,6 +52,9 @@ const char *iwdg_addrs[] = {
  * @remarks This function calculate the equivalent recharge time of IWDG in nanoseconds
  * The calculated time depends on the frequency LSI, prescaler value and
  * the reload Register RLR.
+ * 
+ * Next expiration is computed in ns based on new counter value and the timer frequency
+ * (period). This might be computed as follows: period = (1 / TIMER_FREQ_MHZ) * 1000 * scale.
 */    
 static uint32_t tim_period(STM32F4xxIWDGState *s)
 {   
@@ -65,7 +68,9 @@ static uint32_t tim_period(STM32F4xxIWDGState *s)
      */
     uint32_t period = (1000000 * s->prescaler) / 40;
     printf("Multiplying period %lu by s->iwdg_rlr %lu to get period of %lu\n", period, s->iwdg_rlr, period * s->iwdg_rlr);
-    //return 215898112000;
+    // Extending period long enough (e.g. this value) prevents reset
+    // Meaning reset may be happening because period isn't extended long enough for some reason
+    //return 2158981120000;
     return ((period * s->iwdg_rlr)); // time in nanoseconds
 }
 

@@ -146,6 +146,7 @@ AioContext *qemu_get_aio_context(void)
 
 void qemu_notify_event(void)
 {
+    //printf("qemu_notify_event\n");
     if (!qemu_aio_context) {
         return;
     }

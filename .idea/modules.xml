@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/meson/test cases/java/2 subdir/2 subdir.iml" filepath="$PROJECT_DIR$/meson/test cases/java/2 subdir/2 subdir.iml" />
+      <module fileurl="file://$PROJECT_DIR$/meson/test cases/java/7 linking/7 linking.iml" filepath="$PROJECT_DIR$/meson/test cases/java/7 linking/7 linking.iml" />
+      <module fileurl="file://$PROJECT_DIR$/meson/test cases/java/9 jdk/9 jdk.iml" filepath="$PROJECT_DIR$/meson/test cases/java/9 jdk/9 jdk.iml" />
+      <module fileurl="file://$PROJECT_DIR$/capstone/capstone.iml" filepath="$PROJECT_DIR$/capstone/capstone.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/qemu.iml" filepath="$PROJECT_DIR$/.idea/qemu.iml" />
+      <module fileurl="file://$PROJECT_DIR$/meson/test cases/java/test cases.iml" filepath="$PROJECT_DIR$/meson/test cases/java/test cases.iml" />
+    </modules>
+  </component>
+</project>

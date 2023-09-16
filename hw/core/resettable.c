@@ -116,6 +116,7 @@ static void resettable_phase_enter(Object *obj, void *opaque, ResetType type)
     ResettableClass *rc = RESETTABLE_GET_CLASS(obj);
     ResettableState *s = rc->get_state(obj);
     const char *obj_typename = object_get_typename(obj);
+    printf("resettable_phase_enter: %s\n", obj_typename);
     bool action_needed = false;
 
     /* exit phase has to finish properly before entering back in reset */
@@ -163,6 +164,7 @@ static void resettable_phase_hold(Object *obj, void *opaque, ResetType type)
     ResettableClass *rc = RESETTABLE_GET_CLASS(obj);
     ResettableState *s = rc->get_state(obj);
     const char *obj_typename = object_get_typename(obj);
+    printf("resettable_phase_hold: %s\n", obj_typename);
 
     /* exit phase has to finish properly before entering back in reset */
     assert(!s->exit_phase_in_progress);
@@ -266,6 +268,7 @@ void resettable_change_parent(Object *obj, Object *newp, Object *oldp)
 
 void resettable_cold_reset_fn(void *opaque)
 {
+    printf("resettable_cold_reset\n");
     resettable_reset((Object *) opaque, RESET_TYPE_COLD);
 }
 

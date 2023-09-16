@@ -40,6 +40,7 @@ static QTAILQ_HEAD(, QEMUResetEntry) reset_handlers =
 
 void qemu_register_reset(QEMUResetHandler *func, void *opaque)
 {
+    printf("qemu_register_reset\n");
     QEMUResetEntry *re = g_malloc0(sizeof(QEMUResetEntry));
 
     re->func = func;

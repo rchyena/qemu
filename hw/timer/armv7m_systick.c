@@ -46,7 +46,7 @@ static void systick_set_period_from_clock(SysTickState *s)
 
 static void systick_timer_tick(void *opaque)
 {
-    printf("systick_timer_tick\n");
+    //printf("systick_timer_tick\n");
     SysTickState *s = (SysTickState *)opaque;
 
     trace_systick_timer_tick();

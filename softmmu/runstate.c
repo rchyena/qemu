@@ -226,6 +226,7 @@ bool runstate_is_running(void)
 
 bool runstate_needs_reset(void)
 {
+    //printf("runstate_needs_reset\n");
     return runstate_check(RUN_STATE_INTERNAL_ERROR) ||
         runstate_check(RUN_STATE_SHUTDOWN);
 }
@@ -390,6 +391,7 @@ static void qemu_kill_report(void)
 
 static ShutdownCause qemu_reset_requested(void)
 {
+    //printf("qemu_reset_requested\n");
     ShutdownCause r = reset_requested;
 
     if (r && replay_checkpoint(CHECKPOINT_RESET_REQUESTED)) {
@@ -433,6 +435,7 @@ static int qemu_debug_requested(void)
  */
 void qemu_system_reset(ShutdownCause reason)
 {
+    printf("qemu_system_reset\n");
     MachineClass *mc;
 
     mc = current_machine ? MACHINE_GET_CLASS(current_machine) : NULL;
@@ -440,14 +443,17 @@ void qemu_system_reset(ShutdownCause reason)
     cpu_synchronize_all_states();
 
     if (mc && mc->reset) {
+        printf("one\n");
         mc->reset(current_machine);
     } else {
+        printf("two\n");
         qemu_devices_reset();
     }
     if (reason && reason != SHUTDOWN_CAUSE_SUBSYSTEM_RESET) {
+        printf("three\n");
         qapi_event_send_reset(shutdown_caused_by_guest(reason), reason);
     }
-    cpu_synchronize_all_post_reset();
+    //cpu_synchronize_all_post_reset();
 }
 
 /*
@@ -526,6 +532,7 @@ void qemu_system_guest_crashloaded(GuestPanicInformation *info)
 
 void qemu_system_reset_request(ShutdownCause reason)
 {
+    printf("qemu_system_reset_request\n");
     if (reboot_action == REBOOT_ACTION_SHUTDOWN &&
         reason != SHUTDOWN_CAUSE_SUBSYSTEM_RESET) {
         shutdown_requested = reason;
@@ -663,6 +670,7 @@ void qemu_system_debug_request(void)
 
 static bool main_loop_should_exit(void)
 {
+    //printf("main_loop_should_exit\n");
     RunState r;
     ShutdownCause request;
 
@@ -684,6 +692,7 @@ static bool main_loop_should_exit(void)
     }
     request = qemu_reset_requested();
     if (request) {
+        printf("main_loop_should_exit reset request\n");
         pause_all_vcpus();
         qemu_system_reset(request);
         resume_all_vcpus();
