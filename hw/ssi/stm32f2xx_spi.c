@@ -61,7 +61,7 @@ static void stm32f2xx_spi_reset(DeviceState *dev)
 {
     STM32F2XXSPIState *s = STM32F2XX_SPI(dev);
 
-	printf("stm32f2xx_spi_reset\n");
+	//printf("stm32f2xx_spi_reset\n");
     s->spi_cr1 = 0x00000000;
     s->spi_cr2 = 0x00000000;
     s->spi_sr = 0x0000000A;
