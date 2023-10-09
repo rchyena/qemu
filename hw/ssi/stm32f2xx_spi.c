@@ -141,7 +141,7 @@ static uint64_t stm32f2xx_spi_read(void *opaque, hwaddr addr,
     STM32F2XXSPIState *s = opaque;
 
     DB_PRINT("Address: 0x%" HWADDR_PRIx "\n", addr);
-    printf("[SPI]: stm32f2xx_spi_read register: 0x%" HWADDR_PRIx " %s\n", addr, spi_addrs[addr]);
+    //printf("[SPI]: stm32f2xx_spi_read register: 0x%" HWADDR_PRIx " %s\n", addr, spi_addrs[addr]);
     //printf("cr1: %llx, sr: %llx, dr: %llx\n", s->spi_cr1, s->spi_sr, s->spi_dr);
 
     switch (addr) {
