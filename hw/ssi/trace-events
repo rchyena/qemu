@@ -26,4 +26,5 @@ npcm7xx_fiu_flash_write(const char *id, unsigned cs, uint64_t addr, unsigned int
 #                  Telemetry                  #
 ###############################################
 # stm32f2xx_spi.c
-# stm32f4xx_timer.c
+stm32f2xx_spi_write(uint32_t value) "[SPI WRITE] value: 0x%llx"
+stm32f2xx_spi_read(uint32_t value) "[SPI READ] value: 0x%x"

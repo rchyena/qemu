@@ -2451,6 +2451,8 @@ if have_block
 endif
 if have_system
   trace_events_subdirs += [
+    'hw/arm',
+    'hw/ssi',
     'accel/kvm',
     'audio',
     'backends',
@@ -2461,7 +2463,6 @@ if have_system
     'hw/acpi',
     'hw/adc',
     'hw/alpha',
-    'hw/arm',
     'hw/audio',
     'hw/block',
     'hw/block/dataplane',
@@ -2498,7 +2499,6 @@ if have_system
     'hw/sh4',
     'hw/sparc',
     'hw/sparc64',
-    'hw/ssi',
     'hw/timer',
     'hw/tpm',
     'hw/usb',

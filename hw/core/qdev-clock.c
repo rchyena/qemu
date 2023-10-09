@@ -149,7 +149,7 @@ static NamedClockList *qdev_get_clocklist(DeviceState *dev, const char *name)
     NamedClockList *ncl;
 
     QLIST_FOREACH(ncl, &dev->clocks, node) {
-		printf("clockname %s\n", ncl->name);
+		//printf("clockname %s\n", ncl->name);
         if (strcmp(name, ncl->name) == 0) {
             return ncl;
         }

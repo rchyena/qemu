@@ -32,7 +32,7 @@
 
 static void systick_set_period_from_clock(SysTickState *s)
 {
-    printf("systick_set_period_from_clock\n");
+    //printf("systick_set_period_from_clock\n");
     /*
      * Set the ptimer period from whichever clock is selected.
      * Must be called from within a ptimer transaction block.
@@ -128,7 +128,7 @@ static MemTxResult systick_write(void *opaque, hwaddr addr,
                                  uint64_t value, unsigned size,
                                  MemTxAttrs attrs)
 {
-    printf("systick_write\n");
+    //printf("systick_write\n");
     SysTickState *s = opaque;
 
     if (attrs.user) {
@@ -203,7 +203,7 @@ static const MemoryRegionOps systick_ops = {
 
 static void systick_reset(DeviceState *dev)
 {
-    printf("systick_reset\n");
+    //printf("systick_reset\n");
     SysTickState *s = SYSTICK(dev);
 
     ptimer_transaction_begin(s->ptimer);
@@ -221,7 +221,7 @@ static void systick_reset(DeviceState *dev)
 
 static void systick_cpuclk_update(void *opaque, ClockEvent event)
 {
-    printf("systick_cpuclk_update\n");
+    //printf("systick_cpuclk_update\n");
     SysTickState *s = SYSTICK(opaque);
 
     if (!(s->control & SYSTICK_CLKSOURCE)) {
@@ -235,7 +235,7 @@ static void systick_cpuclk_update(void *opaque, ClockEvent event)
 
 static void systick_refclk_update(void *opaque, ClockEvent event)
 {
-    printf("systick_refclkupdate\n");
+    //printf("systick_refclkupdate\n");
     SysTickState *s = SYSTICK(opaque);
 
     if (s->control & SYSTICK_CLKSOURCE) {

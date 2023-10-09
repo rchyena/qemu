@@ -29,6 +29,7 @@
 #include "hw/arm/stm32f407vgtx_soc.h"
 #include "hw/qdev-clock.h"
 #include "hw/misc/unimp.h"
+#include "trace.h"
 
 #define SYSCFG_ADD                     0x40013800
 static const uint32_t usart_addr[] = { 0x40011000, 0x40004400, 0x40004800,
@@ -60,10 +61,12 @@ static void stm32f407vgtx_soc_initfn(Object *obj)
     STM32F407VGTXState *s = STM32F407VGTX_SOC(obj);
     int i;
 
-    printf("init armv7m\n");
+    //printf("[INIT]: init armv7m\n");
+    trace_stm32f407vgtx_soc_initfn(TYPE_ARMV7M);
     object_initialize_child(obj, "armv7m", &s->armv7m, TYPE_ARMV7M);
 
-    printf("init syscfg\n");
+    //printf("[INIT]: init syscfg\n");
+    trace_stm32f407vgtx_soc_initfn(TYPE_STM32F4XX_SYSCFG);
     object_initialize_child(obj, "syscfg", &s->syscfg, TYPE_STM32F4XX_SYSCFG);
     //object_initialize_child(obj, "cc112x", &s->syscfg, TYPE_CC_112X);
 
@@ -73,47 +76,53 @@ static void stm32f407vgtx_soc_initfn(Object *obj)
     //printf("init cc112x\n");
     //object_initialize_child(obj, "cc112x", &s->cc112x, TYPE_CC_112X);
     
-    printf("init iwdg\n");
+    //printf("[INIT]: init iwdg\n");
+    trace_stm32f407vgtx_soc_initfn(TYPE_STM32F4XX_IWDG);
     object_initialize_child(obj, "iwdg", &s->iwdg, TYPE_STM32F4XX_IWDG);
 
-    printf("init uart\n");
+    //printf("[INIT]: init uart\n");
+    trace_stm32f407vgtx_soc_initfn(TYPE_STM32F2XX_USART);
     for (i = 0; i < STM_NUM_USARTS; i++) {
         object_initialize_child(obj, "usart[*]", &s->usart[i],
                                 TYPE_STM32F2XX_USART);
     }
 
-    printf("init timer\n");
+    //printf("[INIT]: init timer\n");
+    trace_stm32f407vgtx_soc_initfn(TYPE_STM32F2XX_TIMER);
     for (i = 0; i < STM_NUM_TIMERS; i++) {
         object_initialize_child(obj, "timer[*]", &s->timer[i],
                                 TYPE_STM32F2XX_TIMER);
     }
 
-    printf("init adc\n");
+    //printf("[INIT]: init adc\n");
+    trace_stm32f407vgtx_soc_initfn(TYPE_STM32F2XX_ADC);
     for (i = 0; i < STM_NUM_ADCS; i++) {
         object_initialize_child(obj, "adc[*]", &s->adc[i], TYPE_STM32F2XX_ADC);
     }
 
-    printf("init spis\n");
+    //printf("[INIT]: init spis\n");
+    trace_stm32f407vgtx_soc_initfn(TYPE_STM32F2XX_SPI);
     for (i = 0; i < STM_NUM_SPIS; i++) {
         object_initialize_child(obj, "spi[*]", &s->spi[i], TYPE_STM32F2XX_SPI);
     }
 
-    printf("init exti\n");
+    //printf("[INIT]: init exti\n");
+    trace_stm32f407vgtx_soc_initfn(TYPE_STM32F4XX_EXTI);
     object_initialize_child(obj, "exti", &s->exti, TYPE_STM32F4XX_EXTI);
 
-    printf("init clocks\n");
+    //printf("[INIT]: init clocks\n");
+    trace_stm32f407vgtx_soc_initfn("CLOCKS");
     s->sysclk = qdev_init_clock_in(DEVICE(s), "sysclk", NULL, NULL, 0);
     s->refclk = qdev_init_clock_in(DEVICE(s), "refclk", NULL, NULL, 0);
 }
 
 static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
 {
-    printf("starting to realize devices\n");
     STM32F407VGTXState *s = STM32F407VGTX_SOC(dev_soc);
     MemoryRegion *system_memory = get_system_memory();
     DeviceState *dev, *armv7m;
     SysBusDevice *busdev;
-    SSIPeripheral *ssidev;
+    //SSIPeripheral *ssidev;
     Error *err = NULL;
     int i;
     /*
@@ -140,7 +149,8 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
     clock_set_mul_div(s->refclk, 8, 1);
     clock_set_source(s->refclk, s->sysclk);
 
-	printf("stm32f407vgtx_soc_realize flash\n");
+	//printf("[INIT]: stm32f407vgtx_soc_realize flash\n");
+    trace_stm32f407vgtx_soc_realize("flash");
     memory_region_init_rom(&s->flash, OBJECT(dev_soc), "STM32F407VGTx.flash",
                            FLASH_SIZE, &err);
     if (err != NULL) {
@@ -148,7 +158,8 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
         return;
     }
 
-	printf("stm32f407vgtx_soc_realize flash.alias\n");
+	//printf("[INIT]: stm32f407vgtx_soc_realize flash.alias\n");
+    trace_stm32f407vgtx_soc_realize("flash_alias");
 
     memory_region_init_alias(&s->flash_alias, OBJECT(dev_soc),
                              "STM32F407VGTX.flash.alias", &s->flash, 0,
@@ -157,7 +168,8 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
     memory_region_add_subregion(system_memory, FLASH_BASE_ADDRESS, &s->flash);
     memory_region_add_subregion(system_memory, 0, &s->flash_alias);
 
-	printf("stm32f407vgtx_soc_realize flash.sram\n");
+	//printf("[INIT]: stm32f407vgtx_soc_realize flash.sram\n");
+    trace_stm32f407vgtx_soc_realize("flash_sram");
 
     memory_region_init_ram(&s->sram, NULL, "STM32F407VGTX.sram", SRAM_SIZE,
                            &err);
@@ -176,7 +188,8 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
     object_property_set_link(OBJECT(&s->armv7m), "memory",
                              OBJECT(system_memory), &error_abort);
 
-	printf("stm32f407vgtx_soc_realize sysbus_realize %p\n", &s->armv7m);
+	//printf("[INIT]: stm32f407vgtx_soc_realize sysbus_realize %p\n", &s->armv7m);
+    trace_stm32f407vgtx_soc_realize("sysbus");
 
     if (!sysbus_realize(SYS_BUS_DEVICE(&s->armv7m), errp)) {
         return;
@@ -195,7 +208,8 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
     //sysbus_connect_irq(busdev, 0, qdev_get_gpio_in(armv7m, SYSCFG_IRQ));
     */
     
-    printf("stm32f407vgtx_soc_realize iwdg\n");
+    //printf("[INIT]: stm32f407vgtx_soc_realize iwdg\n");
+    trace_stm32f407vgtx_soc_realize("watchdog");
     dev = DEVICE(&(s->iwdg));
     if (!sysbus_realize(SYS_BUS_DEVICE(&s->iwdg), errp)) {
         return;
@@ -203,7 +217,8 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
     busdev = SYS_BUS_DEVICE(dev);
     sysbus_mmio_map(busdev, 0, IWDG_ADDR);
 
-	printf("stm32f407vgtx_soc_realize syscfg\n");
+	//printf("[INIT]: stm32f407vgtx_soc_realize syscfg\n");
+    trace_stm32f407vgtx_soc_realize("sysfcg");
     dev = DEVICE(&s->syscfg);
     if (!sysbus_realize(SYS_BUS_DEVICE(&s->syscfg), errp)) {
         return;
@@ -211,7 +226,8 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
     busdev = SYS_BUS_DEVICE(dev);
     sysbus_mmio_map(busdev, 0, SYSCFG_ADD);
 
-	printf("stm32f407vgtx_soc_realize uart controller\n");
+	//printf("[INIT]: stm32f407vgtx_soc_realize uart controller\n");
+    trace_stm32f407vgtx_soc_realize("uart controller");
     /* Attach UART (uses USART registers) and USART controllers */
     for (i = 0; i < STM_NUM_USARTS; i++) {
         dev = DEVICE(&(s->usart[i]));
@@ -223,7 +239,8 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
         sysbus_mmio_map(busdev, 0, usart_addr[i]);
         sysbus_connect_irq(busdev, 0, qdev_get_gpio_in(armv7m, usart_irq[i]));
     }
-	printf("stm32f407vgtx_soc_realize timers\n");
+	//printf("[INIT]: stm32f407vgtx_soc_realize timers\n");
+    trace_stm32f407vgtx_soc_realize("timers");
 
     /* Timer 2 to 5 */
     for (i = 0; i < STM_NUM_TIMERS; i++) {
@@ -236,7 +253,8 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
         sysbus_mmio_map(busdev, 0, timer_addr[i]);
         sysbus_connect_irq(busdev, 0, qdev_get_gpio_in(armv7m, timer_irq[i]));
     }
-	printf("stm32f407vgtx_soc_realize adc\n");
+	//printf("[INIT]: stm32f407vgtx_soc_realize adc\n");
+    trace_stm32f407vgtx_soc_realize("adc");
 
     /* ADC device, the IRQs are ORed together */
     if (!object_initialize_child_with_props(OBJECT(s), "adc-orirq",
@@ -251,7 +269,8 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
         return;
     }
 
-	printf("stm32f407vgtx_soc_realize gpio\n");
+	//printf("[INIT]: stm32f407vgtx_soc_realize gpio\n");
+    trace_stm32f407vgtx_soc_realize("gpio");
 
     qdev_connect_gpio_out(DEVICE(&s->adc_irqs), 0,
                           qdev_get_gpio_in(armv7m, ADC_IRQ));
@@ -266,7 +285,8 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
         sysbus_connect_irq(busdev, 0,
                            qdev_get_gpio_in(DEVICE(&s->adc_irqs), i));
     }
-	printf("stm32f407vgtx_soc_realize spi\n");
+	//printf("[INIT]: stm32f407vgtx_soc_realize spi\n");
+    trace_stm32f407vgtx_soc_realize("spi");
 
     /* SPI devices */
     for (i = 0; i < STM_NUM_SPIS; i++) {
@@ -278,7 +298,8 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
         sysbus_mmio_map(busdev, 0, spi_addr[i]);
         sysbus_connect_irq(busdev, 0, qdev_get_gpio_in(armv7m, spi_irq[i]));
     }
-	printf("stm32f407vgtx_soc_realize exti\n");
+	//printf("[INIT]: stm32f407vgtx_soc_realize exti\n");
+    trace_stm32f407vgtx_soc_realize("exti");
 
     /* EXTI device */
     dev = DEVICE(&s->exti);
@@ -297,17 +318,18 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
     busdev = SYS_BUS_DEVICE(dev);
     sysbus_mmio_map(busdev, 0, EXTI_ADDR);
 
-    printf("sysbus_connect_irq\n");
+    //printf("[INIT]: sysbus_connect_irq\n");
+    trace_stm32f407vgtx_soc_realize("irq");
     for (i = 0; i < 16; i++) {
         sysbus_connect_irq(busdev, i, qdev_get_gpio_in(armv7m, exti_irq[i]));
     }
-    printf("qdev_connect_gpio_out\n");
+    //printf("[INIT]: qdev_connect_gpio_out\n");
+    trace_stm32f407vgtx_soc_realize("gpio");
     for (i = 0; i < 16; i++) {
         qdev_connect_gpio_out(DEVICE(&s->syscfg), i, qdev_get_gpio_in(dev, i));
     }
 
     // anything at this location, we don't care about behavior (don't make us fail)
-    printf("unimplemented device creates\n");
     create_unimplemented_device("timer[7]",    0x40001400, 0x400);
     create_unimplemented_device("timer[12]",   0x40001800, 0x400);
     create_unimplemented_device("timer[6]",    0x40001000, 0x400);
@@ -351,7 +373,6 @@ static void stm32f407vgtx_soc_realize(DeviceState *dev_soc, Error **errp)
     create_unimplemented_device("USB OTG FS",  0x50000000, 0x31000);
     create_unimplemented_device("DCMI",        0x50050000, 0x400);
     create_unimplemented_device("RNG",         0x50060800, 0x400);
-    printf("end of soc realization function\n");
 }
 
 static Property stm32f407vgtx_soc_properties[] = {

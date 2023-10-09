@@ -27,6 +27,7 @@
 #include "qemu/module.h"
 #include "hw/ssi/stm32f2xx_spi.h"
 #include "migration/vmstate.h"
+#include "trace.h"
 
 #ifndef STM_SPI_ERR_DEBUG
 #define STM_SPI_ERR_DEBUG 0
@@ -84,8 +85,8 @@ static void stm32f2xx_spi_reset(DeviceState *dev)
 static void stm32f2xx_spi_transfer(STM32F2XXSPIState *s)
 {
     DB_PRINT("Data to send: 0x%x\n", s->spi_dr);
-    printf("Data to send: 0x%x\n", s->spi_dr);
-    printf("ssi_transfer before s->ssi: 0x%x\n", s->ssi);
+    //printf("Data to send: 0x%x\n", s->spi_dr);
+    //printf("ssi_transfer before s->ssi: 0x%x\n", s->ssi);
 
     //s->spi_dr = ssi_transfer(s->ssi, s->spi_dr);
     // Assuming status register needs to be updated to reflect some sort of status?
@@ -93,8 +94,8 @@ static void stm32f2xx_spi_transfer(STM32F2XXSPIState *s)
 
     // Not finding device and just receiving 0.
     DB_PRINT("Data received: 0x%x\n", s->spi_dr);
-    printf("Data received: 0x%x\n", s->spi_dr);
-    printf("ssi_transfer after s->ssi: 0x%x\n", s->ssi);
+    //printf("Data received: 0x%x\n", s->spi_dr);
+    //printf("ssi_transfer after s->ssi: 0x%x\n", s->ssi);
 
 }
 
@@ -140,8 +141,8 @@ static uint64_t stm32f2xx_spi_read(void *opaque, hwaddr addr,
     STM32F2XXSPIState *s = opaque;
 
     DB_PRINT("Address: 0x%" HWADDR_PRIx "\n", addr);
-    printf("stm32f2xx_spi_read register: 0x%" HWADDR_PRIx " %s\n", addr, spi_addrs[addr]);
-    printf("cr1: %llx, sr: %llx, dr: %llx\n", s->spi_cr1, s->spi_sr, s->spi_dr);
+    printf("[SPI]: stm32f2xx_spi_read register: 0x%" HWADDR_PRIx " %s\n", addr, spi_addrs[addr]);
+    //printf("cr1: %llx, sr: %llx, dr: %llx\n", s->spi_cr1, s->spi_sr, s->spi_dr);
 
     switch (addr) {
     case STM_SPI_CR1:
@@ -169,7 +170,7 @@ static uint64_t stm32f2xx_spi_read(void *opaque, hwaddr addr,
             s->spi_dr = 0x41;
         } else if ((radio_addr != 0) && (toRead == 1)) {
             seen_value = registers[radio_addr][0];
-            printf("Read 0x%x from 0x%x\n", seen_value, radio_addr);
+            //printf("Read 0x%x from 0x%x\n", seen_value, radio_addr);
             toRead = 2;
         } else if (toRead == 2) {
             s->spi_dr = seen_value;
@@ -177,7 +178,8 @@ static uint64_t stm32f2xx_spi_read(void *opaque, hwaddr addr,
             toRead = 0;
         }
 
-        printf("returning from spi_read with s->spi_dr: 0x%x\n", s->spi_dr);
+        //printf("[SPI]: returning from spi_read with s->spi_dr: 0x%x\n", s->spi_dr);
+        trace_stm32f2xx_spi_read(s->spi_dr);
         return s->spi_dr;
     case STM_SPI_CRCPR:
         qemu_log_mask(LOG_UNIMP, "%s: CRC is not implemented, the registers " \
@@ -214,7 +216,8 @@ static void stm32f2xx_spi_write(void *opaque, hwaddr addr,
     uint32_t value = val64;
 
     DB_PRINT("Address: 0x%" HWADDR_PRIx ", Value: 0x%x\n", addr, value);
-    printf("stm32f2xx_spi_write: 0x%" HWADDR_PRIx " %s, Value: 0x%x\n", addr, spi_addrs[addr], value);
+    //printf("[SPI]: stm32f2xx_spi_write: 0x%" HWADDR_PRIx " %s, Value: 0x%x\n", addr, spi_addrs[addr], value);
+    trace_stm32f2xx_spi_write(value);
     
     /*
      * Scripting (passthrough) attempt.
@@ -233,11 +236,9 @@ static void stm32f2xx_spi_write(void *opaque, hwaddr addr,
      */
     switch (value) {
         case 0x2f:
-            printf("Case 2f\n");
             toWrite = 1;
             break;
         case 0xaf:
-            printf("Case af\n");
             toRead = 1;
             break;
         default:
@@ -262,9 +263,9 @@ static void stm32f2xx_spi_write(void *opaque, hwaddr addr,
     */
     if ((toWrite == 1) && (radio_addr != 0) && (radio_addr != value)) {
         // Referencing register using extended reg address (i.e. lower 2 bytes as referenced by upsat)
-        printf("Write 0x%x to 0x%x\n", value, radio_addr);
+        //printf("[SPI]: Write 0x%x to 0x%x\n", value, radio_addr);
         registers[radio_addr][0] = value;
-        printf("Confirming value was written: 0x%x\n", registers[radio_addr][0]);
+        //printf("Confirming value was written: 0x%x\n", registers[radio_addr][0]);
         toWrite = 0;
         radio_addr = 0;
     }
@@ -349,7 +350,7 @@ static void stm32f2xx_spi_init(Object *obj)
     STM32F2XXSPIState *s = STM32F2XX_SPI(obj);
     DeviceState *dev = DEVICE(obj);
 
-	printf("stm32f2xx_spi_init\n");
+	//printf("stm32f2xx_spi_init\n");
     memory_region_init_io(&s->mmio, obj, &stm32f2xx_spi_ops, s,
                           TYPE_STM32F2XX_SPI, 0x400);
     sysbus_init_mmio(SYS_BUS_DEVICE(obj), &s->mmio);

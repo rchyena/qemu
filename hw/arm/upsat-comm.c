@@ -45,7 +45,7 @@ static void upsat_comm_init(MachineState *machine)
 
     dev = qdev_new(TYPE_STM32F407VGTX_SOC);
     qdev_prop_set_string(dev, "cpu-type", ARM_CPU_TYPE_NAME("cortex-m4"));
-	printf("sysclk2 %p\n", sysclk);
+	//printf("sysclk2 %p\n", sysclk);
     qdev_connect_clock_in(dev, "sysclk", sysclk);
     sysbus_realize_and_unref(SYS_BUS_DEVICE(dev), &error_fatal);
 
@@ -55,7 +55,7 @@ static void upsat_comm_init(MachineState *machine)
 
 static void upsat_comm_machine_init(MachineClass *mc)
 {
-    printf("Init UPsat Comm Machine\n");
+    //printf("Init UPsat Comm Machine\n");
     mc->desc = "Upsat Comm Device";
     mc->init = upsat_comm_init;
     mc->ignore_memory_transaction_failures = true;
