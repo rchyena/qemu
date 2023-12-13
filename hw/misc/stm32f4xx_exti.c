@@ -31,6 +31,7 @@
 
 static void stm32f4xx_exti_reset(DeviceState *dev)
 {
+    trace_stm32f4xx_exti_reset("STM32F4XX_EXTI_RESET\n");
     STM32F4xxExtiState *s = STM32F4XX_EXTI(dev);
 
     s->exti_imr = 0x00000000;

@@ -30,12 +30,14 @@
 #include "qemu/error-report.h"
 #include "hw/arm/stm32f407vgtx_soc.h"
 #include "hw/arm/boot.h"
+#include "trace.h"
 
 /* Main SYSCLK frequency in Hz (168MHz) */
 #define SYSCLK_FRQ 168000000ULL
 
 static void upsat_comm_init(MachineState *machine)
 {
+    trace_upsat_comm_init("UPSAT_COMM_INIT\n");
     DeviceState *dev;
     Clock *sysclk;
 
@@ -55,6 +57,7 @@ static void upsat_comm_init(MachineState *machine)
 
 static void upsat_comm_machine_init(MachineClass *mc)
 {
+    trace_upsat_comm_machine_init("UPSAT_COMM_MACHINE_INIT\n");
     //printf("Init UPsat Comm Machine\n");
     mc->desc = "Upsat Comm Device";
     mc->init = upsat_comm_init;

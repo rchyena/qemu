@@ -60,6 +60,7 @@ uint8_t registers[217][1];
   
 static void stm32f2xx_spi_reset(DeviceState *dev)
 {
+    trace_stm32f2xx_spi_reset("RESET\n");
     STM32F2XXSPIState *s = STM32F2XX_SPI(dev);
 
 	//printf("stm32f2xx_spi_reset\n");
@@ -84,6 +85,7 @@ static void stm32f2xx_spi_reset(DeviceState *dev)
  */
 static void stm32f2xx_spi_transfer(STM32F2XXSPIState *s)
 {
+    trace_stm32f2xx_spi_transfer("TRANSFER\n");
     DB_PRINT("Data to send: 0x%x\n", s->spi_dr);
     //printf("Data to send: 0x%x\n", s->spi_dr);
     //printf("ssi_transfer before s->ssi: 0x%x\n", s->ssi);
@@ -347,6 +349,7 @@ static const VMStateDescription vmstate_stm32f2xx_spi = {
 
 static void stm32f2xx_spi_init(Object *obj)
 {
+    trace_stm32f2xx_spi_init("INIT\n");
     STM32F2XXSPIState *s = STM32F2XX_SPI(obj);
     DeviceState *dev = DEVICE(obj);
 
@@ -362,6 +365,7 @@ static void stm32f2xx_spi_init(Object *obj)
 
 static void stm32f2xx_spi_class_init(ObjectClass *klass, void *data)
 {
+    trace_stm32f2xx_spi_class_init("CLASS_INIT\n");
     DeviceClass *dc = DEVICE_CLASS(klass);
 
     dc->reset = stm32f2xx_spi_reset;
@@ -378,6 +382,7 @@ static const TypeInfo stm32f2xx_spi_info = {
 
 static void stm32f2xx_spi_register_types(void)
 {
+    trace_stm32f2xx_spi_register_types("REGISTER_TYPES\n");
     type_register_static(&stm32f2xx_spi_info);
 }
 

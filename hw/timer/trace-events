@@ -35,10 +35,12 @@ aspeed_timer_read(uint64_t offset, unsigned size, uint64_t value) "From 0x%" PRI
 
 # TODO: Add trace for 'systick_timer_tick'?
 # armv7m_systick.c
-#systick_reload(void) "systick reload"
-systick_timer_tick(void) "systick reload"
-systick_read(uint64_t addr, uint32_t value, unsigned size) "systick read addr 0x%" PRIx64 " data 0x%" PRIx32 " size %u"
-systick_write(uint64_t addr, uint32_t value, unsigned size) "systick write addr 0x%" PRIx64 " data 0x%" PRIx32 " size %u"
+#systick_timer_tick(void) "systick reload"
+#systick_read(uint64_t addr, uint32_t value, unsigned size) "systick read addr 0x%" PRIx64 " data 0x%" PRIx32 " size %u"
+#systick_write(uint64_t addr, uint32_t value, unsigned size) "systick write addr 0x%" PRIx64 " data 0x%" PRIx32 " size %u"
+systick_timer_tick(const char *status) "%s"
+systick_read(const char *status) "%s"
+systick_write(const char *status) "%s"
 
 # cmsdk-apb-timer.c
 cmsdk_apb_timer_read(uint64_t offset, uint64_t data, unsigned size) "CMSDK APB timer read: offset 0x%" PRIx64 " data 0x%" PRIx64 " size %u"
@@ -100,3 +102,15 @@ sifive_pwm_write(uint64_t data, uint64_t offset) "Write 0x%" PRIx64 " at address
 sh_timer_start_stop(int enable, int current) "%d (%d)"
 sh_timer_read(uint64_t offset) "tmu012_read 0x%" PRIx64
 sh_timer_write(uint64_t offset, uint64_t value) "tmu012_write 0x%" PRIx64 " 0x%08" PRIx64
+
+# stm32f2xx_timer.c
+stm32f2xx_timer_interrupt(const char *status) "%s"
+stm32f2xx_ns_to_ticks(const char *status) "%s"
+stm32f2xx_timer_set_alarm(const char *status) "%s"
+stm32f2xx_timer_reset(const char *status) "%s"
+stm32f2xx_timer_read(const char *status) "%s"
+stm32f2xx_timer_write(const char *status) "%s"
+stm32f2xx_timer_init(const char *status) "%s"
+stm32f2xx_timer_realize(const char *status) "%s"
+stm32f2xx_timer_class_init(const char *status) "%s"
+stm32f2xx_timer_register_types(const char *status) "%s"

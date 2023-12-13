@@ -49,7 +49,7 @@ static void systick_timer_tick(void *opaque)
     //printf("systick_timer_tick\n");
     SysTickState *s = (SysTickState *)opaque;
 
-    trace_systick_timer_tick();
+    trace_systick_timer_tick("SYSTICK_TIMER_TICK\n");
 
     s->control |= SYSTICK_COUNTFLAG;
     if (s->control & SYSTICK_TICKINT) {
@@ -68,7 +68,7 @@ static void systick_timer_tick(void *opaque)
 static MemTxResult systick_read(void *opaque, hwaddr addr, uint64_t *data,
                                 unsigned size, MemTxAttrs attrs)
 {
-    printf("systick_read\n");
+    //printf("systick_read\n");
     SysTickState *s = opaque;
     uint32_t val;
 
@@ -119,7 +119,8 @@ static MemTxResult systick_read(void *opaque, hwaddr addr, uint64_t *data,
         break;
     }
 
-    trace_systick_read(addr, val, size);
+    //trace_systick_read(addr, val, size);
+    trace_systick_read("SYSTICK_READ\n");
     *data = val;
     return MEMTX_OK;
 }
@@ -136,7 +137,8 @@ static MemTxResult systick_write(void *opaque, hwaddr addr,
         return MEMTX_ERROR;
     }
 
-    trace_systick_write(addr, value, size);
+    //trace_systick_write(addr, value, size);
+    trace_systick_write("SYSTICK_WRITE\n");
 
     switch (addr) {
     case 0x0: /* SysTick Control and Status.  */

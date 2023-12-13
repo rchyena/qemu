@@ -22,6 +22,7 @@
 #include "qemu/log.h"
 #include "target/arm/idau.h"
 #include "migration/vmstate.h"
+#include "trace.h"
 
 /* Bitbanded IO.  Each word corresponds to a single bit.  */
 
@@ -34,6 +35,7 @@ static inline hwaddr bitband_addr(BitBandState *s, hwaddr offset)
 static MemTxResult bitband_read(void *opaque, hwaddr offset,
                                 uint64_t *data, unsigned size, MemTxAttrs attrs)
 {
+    trace_bitband_read("BITBAND_READ\n");
     BitBandState *s = opaque;
     uint8_t buf[4];
     MemTxResult res;
@@ -59,6 +61,7 @@ static MemTxResult bitband_read(void *opaque, hwaddr offset,
 static MemTxResult bitband_write(void *opaque, hwaddr offset, uint64_t value,
                                  unsigned size, MemTxAttrs attrs)
 {
+    trace_bitband_write("BITBAND_WRITE\n");
     BitBandState *s = opaque;
     uint8_t buf[4];
     MemTxResult res;
@@ -97,6 +100,7 @@ static const MemoryRegionOps bitband_ops = {
 
 static void bitband_init(Object *obj)
 {
+    trace_bitband_init("BITBAND_INIT\n");
     BitBandState *s = BITBAND(obj);
     SysBusDevice *dev = SYS_BUS_DEVICE(obj);
 
@@ -107,6 +111,7 @@ static void bitband_init(Object *obj)
 
 static void bitband_realize(DeviceState *dev, Error **errp)
 {
+    trace_bitband_realize("BITBAND_REALIZE\n");
     BitBandState *s = BITBAND(dev);
 
     if (!s->source_memory) {
@@ -131,6 +136,7 @@ static MemTxResult v7m_sysreg_ns_write(void *opaque, hwaddr addr,
                                        uint64_t value, unsigned size,
                                        MemTxAttrs attrs)
 {
+    trace_v7m_sysreg_ns_write("v7m_ns_write\n");
     MemoryRegion *mr = opaque;
 
     if (attrs.secure) {
@@ -151,6 +157,7 @@ static MemTxResult v7m_sysreg_ns_read(void *opaque, hwaddr addr,
                                       uint64_t *data, unsigned size,
                                       MemTxAttrs attrs)
 {
+    trace_v7m_sysreg_ns_read("v7m_ns_read\n");
     MemoryRegion *mr = opaque;
 
     if (attrs.secure) {
@@ -178,6 +185,7 @@ static MemTxResult v7m_systick_write(void *opaque, hwaddr addr,
                                      uint64_t value, unsigned size,
                                      MemTxAttrs attrs)
 {
+    trace_v7m_systick_write("v7m_systick_write\n");
     ARMv7MState *s = opaque;
     MemoryRegion *mr;
 
@@ -191,6 +199,7 @@ static MemTxResult v7m_systick_read(void *opaque, hwaddr addr,
                                     uint64_t *data, unsigned size,
                                     MemTxAttrs attrs)
 {
+    trace_v7m_systick_read("v7m_systick_read\n");
     ARMv7MState *s = opaque;
     MemoryRegion *mr;
 
@@ -214,6 +223,7 @@ static MemTxResult ppb_default_read(void *opaque, hwaddr addr,
                                     uint64_t *data, unsigned size,
                                     MemTxAttrs attrs)
 {
+    trace_ppb_default_read("ppb_default_read\n");
     qemu_log_mask(LOG_UNIMP, "Read of unassigned area of PPB: offset 0x%x\n",
                   (uint32_t)addr);
     if (attrs.user) {
@@ -227,6 +237,7 @@ static MemTxResult ppb_default_write(void *opaque, hwaddr addr,
                                      uint64_t value, unsigned size,
                                      MemTxAttrs attrs)
 {
+    trace_ppb_default_write("ppb_default_write\n");
     qemu_log_mask(LOG_UNIMP, "Write of unassigned area of PPB: offset 0x%x\n",
                   (uint32_t)addr);
     if (attrs.user) {
@@ -245,7 +256,8 @@ static const MemoryRegionOps ppb_default_ops = {
 
 static void armv7m_instance_init(Object *obj)
 {
-    printf("armv7m_init\n");
+    //printf("armv7m_init\n");
+    trace_armv7m_instance_init("armv7_instance_init\n");
     ARMv7MState *s = ARMV7M(obj);
     int i;
 
@@ -275,7 +287,8 @@ static void armv7m_instance_init(Object *obj)
 
 static void armv7m_realize(DeviceState *dev, Error **errp)
 {
-    printf("armv7m_realize\n");
+    //printf("armv7m_realize\n");
+    trace_armv7m_realize("armv7m_realize\n");
     ARMv7MState *s = ARMV7M(dev);
     SysBusDevice *sbd;
     Error *err = NULL;
@@ -547,6 +560,7 @@ static const TypeInfo armv7m_info = {
 
 static void armv7m_reset(void *opaque)
 {
+    trace_armv7m_reset("armv7m_reset\n");
     ARMCPU *cpu = opaque;
 
     cpu_reset(CPU(cpu));
@@ -554,6 +568,7 @@ static void armv7m_reset(void *opaque)
 
 void armv7m_load_kernel(ARMCPU *cpu, const char *kernel_filename, int mem_size)
 {
+    trace_armv7m_load_kernel("arvm7m_load_kernel\n");
     int image_size;
     uint64_t entry;
     int big_endian;

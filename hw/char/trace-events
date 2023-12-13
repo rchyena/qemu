@@ -105,3 +105,14 @@ cadence_uart_baudrate(unsigned baudrate) "baudrate %u"
 # sh_serial.c
 sh_serial_read(char *id, unsigned size, uint64_t offs, uint64_t val) " %s size %d offs 0x%02" PRIx64 " -> 0x%02" PRIx64
 sh_serial_write(char *id, unsigned size, uint64_t offs, uint64_t val) "%s size %d offs 0x%02" PRIx64 " <- 0x%02" PRIx64
+
+# stm32f2xx_usart.c
+stm32f2xx_usart_can_receive(const char *status) "%s"
+stm32f2xx_usart_receive(const char *status) "%s"
+stm32f2xx_usart_reset(const char *status) "%s"
+stm32f2xx_usart_read(const char *status) "%s"
+stm32f2xx_usart_write(const char *status) "%s"
+stm32f2xx_usart_init(const char *status) "%s"
+stm32f2xx_usart_realize(const char *status) "%s"
+stm32f2xx_usart_class_init(const char *status) "%s"
+stm32f2xx_usart_register_types(const char *status) "%s"

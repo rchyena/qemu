@@ -26,6 +26,7 @@
 #include "qemu/module.h"
 #include "qemu/timer.h"
 #include "sysemu/watchdog.h"
+#include "trace.h"
 
 const char *iwdg_addrs[] = {
     "kr",
@@ -56,9 +57,9 @@ const char *iwdg_addrs[] = {
  * Next expiration is computed in ns based on new counter value and the timer frequency
  * (period). This might be computed as follows: period = (1 / TIMER_FREQ_MHZ) * 1000 * scale.
 */    
-static int64_t tim_period(STM32F4xxIWDGState *s)
+static int32_t tim_period(STM32F4xxIWDGState *s)
 {   
-    printf("[IWDG]: tim_period: prescaler %lu\n", s->prescaler);
+    //printf("[IWDG]: tim_period: prescaler %lu\n", s->prescaler);
     /* LSI frequency = 37~40kHz 
      * LSI frequency can range from 37kHz to 40kHz.
      * This frequency can be measured on the board, through the Timer10.
@@ -66,8 +67,9 @@ static int64_t tim_period(STM32F4xxIWDGState *s)
      * However, with 40kHz, the watchdog timer accuracy is closer 
      * to the real value. 
      */
-    int64_t period = (1000000 * s->prescaler) / 40;
-    printf("[IWDG]: Multiplying period %lu by s->iwdg_rlr %lu to get period of %lu\n", period, s->iwdg_rlr, period * s->iwdg_rlr);
+    int32_t period = (1000000 * s->prescaler) / 40;
+    //printf("[IWDG]: Multiplying period %lu by s->iwdg_rlr %lu to get period of %lu\n", period, s->iwdg_rlr, period * s->iwdg_rlr);
+    trace_tim_period(period * s->iwdg_rlr);
     return ((period * s->iwdg_rlr)); // time in nanoseconds
 }
 
@@ -82,7 +84,8 @@ static int64_t tim_period(STM32F4xxIWDGState *s)
 */
 static int64_t tim_next_transition(STM32F4xxIWDGState *s, int64_t current_time)
 {   
-    printf("[IWDG]: tim_next_transition current_time %lld + period %lu\n", current_time, tim_period(s));
+    trace_tim_next_transition(current_time);
+    //printf("[IWDG]: tim_next_transition current_time %lld + period %lu\n", current_time, tim_period(s));
     return current_time + tim_period(s);
 }
 
@@ -97,12 +100,13 @@ static int64_t tim_next_transition(STM32F4xxIWDGState *s, int64_t current_time)
 */
 static void iwdg_restart_timer(STM32F4xxIWDGState *d)
 {
-    printf("[IWDG]: iwdg_restart_timer at time %lld\n", qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL));
+    trace_iwdg_restart_timer("RESTART_TIMER\n");
+    //printf("[IWDG]: iwdg_restart_timer at time %lld\n", qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL));
     if (!d->enabled)
         return;
     
     timer_mod(d->timer, tim_next_transition(d, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)));
-    printf("[IWDG]: Updating expiration time of timer to %lld\n",tim_next_transition(d, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)));
+    //printf("[IWDG]: Updating expiration time of timer to %lld\n",tim_next_transition(d, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)));
 }
 
 /**
@@ -114,7 +118,8 @@ static void iwdg_restart_timer(STM32F4xxIWDGState *d)
 */
 static void iwdg_disable_timer(STM32F4xxIWDGState *d)
 {
-    printf("[IWDG]: iwdg_disable_timer\n");
+    //printf("[IWDG]: iwdg_disable_timer\n");
+    trace_iwdg_disable_timer("DISABLE_TIMER\n");
     timer_del(d->timer);
 
 }
@@ -129,8 +134,8 @@ static void iwdg_disable_timer(STM32F4xxIWDGState *d)
 static void stm32f4xx_iwdg_reset(DeviceState *dev)
 {
     STM32F4xxIWDGState *s = STM32F4XX_IWDG(dev);
-
-    printf("[IWDG]: stm32f4xx_iwdg_reset\n");
+    trace_stm32f4xx_iwdg_reset("IWDG_RESET\n");
+    //printf("[IWDG]: stm32f4xx_iwdg_reset\n");
     iwdg_disable_timer(s);
 
     s->reboot_enabled = 0;
@@ -150,7 +155,8 @@ static void stm32f4xx_iwdg_reset(DeviceState *dev)
 */
 static void iwdg_timer_expired(void *vp)
 {
-    printf("[IWDG]: iwdg_timer_expired at time %lld\n", qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL));
+    //printf("[IWDG]: iwdg_timer_expired at time %lld\n", qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL));
+    trace_iwdg_timer_expired("IWDG_TIMER_EXPIRED\n");
     STM32F4xxIWDGState *d = vp;
     
     if (d->reboot_enabled) {
@@ -166,7 +172,8 @@ static void iwdg_timer_expired(void *vp)
 static uint64_t stm32f4xx_iwdg_read(void *opaque, hwaddr addr,
                                unsigned size)
 {
-    printf("[IWDG]: stm32f2xx_iwdg_read: 0x%" HWADDR_PRIx " %s\n", addr, iwdg_addrs[addr]);
+    //printf("[IWDG]: stm32f2xx_iwdg_read: 0x%" HWADDR_PRIx " %s\n", addr, iwdg_addrs[addr]);
+    trace_stm32f4xx_iwdg_read("IWDG_READ\n");
     struct STM32F4xxIWDGState *s = (struct STM32F4xxIWDGState *) opaque;
 
     switch (addr) {
@@ -190,9 +197,10 @@ static uint64_t stm32f4xx_iwdg_read(void *opaque, hwaddr addr,
 static void stm32f4xx_iwdg_write(void *opaque, hwaddr addr,
                             uint64_t value, unsigned size)
 {
-    printf("[IWDG]: stm32f2xx_iwdg_write: 0x%" HWADDR_PRIx " %s, Value: 0x%x\n", addr, iwdg_addrs[addr], value);
+    //printf("[IWDG]: stm32f2xx_iwdg_write: 0x%" HWADDR_PRIx " %s, Value: 0x%x\n", addr, iwdg_addrs[addr], value);
+    trace_stm32f4xx_iwdg_write("IWDG_WRITE\n");
     struct STM32F4xxIWDGState *s = (struct STM32F4xxIWDGState *) opaque;
-    printf("[IWDG]: Entering: kr: %u, pr: %u, rlr: %u, sr: %u\n", s->iwdg_kr, s->iwdg_pr, s->iwdg_rlr, s->iwdg_sr);
+    //printf("[IWDG]: Entering: kr: %u, pr: %u, rlr: %u, sr: %u\n", s->iwdg_kr, s->iwdg_pr, s->iwdg_rlr, s->iwdg_sr);
 
     switch (addr) {
         case STM_IWDG_KR:
@@ -201,15 +209,15 @@ static void stm32f4xx_iwdg_write(void *opaque, hwaddr addr,
                 s->enabled = 1;
                 s->reboot_enabled = 1;
                 timer_mod(s->timer, tim_next_transition(s, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)));
-                printf("[IWDG]: Updating expiration time of timer to %lld\n",tim_next_transition(s, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)));
+                //printf("[IWDG]: Updating expiration time of timer to %lld\n",tim_next_transition(s, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)));
             } else if (s->iwdg_kr == 0xAAAA) { /* IWDG_RLR value is reloaded in the counter */
-                printf("[IWDG]: refresh triggered\n");
+                //printf("[IWDG]: refresh triggered\n");
                 s->timer_reload = s->iwdg_rlr;
                 iwdg_restart_timer(s);
             } else if (s->iwdg_kr == 0x5555) { /* Enable write access to the IWDG_PR and IWDG_RLR registers */
                 s->unlock_state = 1;
             }
-            printf("[IWDG]: Changed s->iwdg_kr to: %u\n", s->iwdg_kr);
+            //printf("[IWDG]: Changed s->iwdg_kr to: %u\n", s->iwdg_kr);
             break;
 
         case STM_IWDG_PR:
@@ -217,14 +225,14 @@ static void stm32f4xx_iwdg_write(void *opaque, hwaddr addr,
                 s->iwdg_pr = value & 0x07;
                 s->prescaler = 4 << s->iwdg_pr;
             }
-            printf("[IWDG]: Changed s->iwdg_pr to: %u\n", s->iwdg_pr);
+            //printf("[IWDG]: Changed s->iwdg_pr to: %u\n", s->iwdg_pr);
             break;
 
         case STM_IWDG_RLR:
             if (s->unlock_state == 1) {
                 s->iwdg_rlr = value & 0x07FF;
             }
-            printf("[IWDG]: Changed s->iwdg_rlr to: %u\n", s->iwdg_rlr);
+            //printf("[IWDG]: Changed s->iwdg_rlr to: %u\n", s->iwdg_rlr);
             break;
 
         case STM_IWDG_SR:
@@ -275,8 +283,9 @@ static const VMStateDescription vmstate_stm32f4xx_iwdg = {
 
 static void stm32f4xx_iwdg_init(Object *obj)
 {
-    printf("[IWDG]: stm32f4xx_iwdg_init\n");
+    //printf("[IWDG]: stm32f4xx_iwdg_init\n");
     STM32F4xxIWDGState *s = STM32F4XX_IWDG(obj);
+    trace_stm32f4xx_iwdg_init("IWDG_INIT\n");
     // s->stm32_rcc = (Stm32Rcc *)s->stm32_rcc_prop;
     // Seems to be where counter is linked to expire function (triggering reset)
     s->timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, iwdg_timer_expired, s);
@@ -303,7 +312,8 @@ static Property stm32f4xx_iwdg_properties[] = {
 
 static void stm32f4xx_iwdg_class_init(ObjectClass *klass, void *data)
 {
-    printf("[IWDG]: iwdg_class_init\n");
+    //printf("[IWDG]: iwdg_class_init\n");
+    trace_stm32f4xx_iwdg_class_init("CLASS_INIT\n");
     DeviceClass *dc = DEVICE_CLASS(klass);
     //SysBusDeviceClass *sc = SYS_BUS_DEVICE_CLASS(klass);    
     
@@ -327,6 +337,7 @@ static const TypeInfo stm32f4xx_iwdg_info = {
 
 static void stm32f4xx_iwdg_register_types(void)
 {
+    trace_stm32f4xx_iwdg_register_types("REGISTER_TYPES\n");
     watchdog_add_model(&model);
     type_register_static(&stm32f4xx_iwdg_info);
 }

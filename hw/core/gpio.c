@@ -21,10 +21,12 @@
 #include "hw/qdev-core.h"
 #include "hw/irq.h"
 #include "qapi/error.h"
+#include "trace.h"
 
 static NamedGPIOList *qdev_get_named_gpio_list(DeviceState *dev,
                                                const char *name)
 {
+    trace_qdev_get_named_gpio_list("qdev_get_named_gpio_list\n");
     NamedGPIOList *ngl;
 
     QLIST_FOREACH(ngl, &dev->gpios, node) {
@@ -45,6 +47,7 @@ void qdev_init_gpio_in_named_with_opaque(DeviceState *dev,
                                          void *opaque,
                                          const char *name, int n)
 {
+    trace_qdev_init_gpio_in_named_with_opaque("QDEV_INIT_GPIO_IN_NAMED_WITH_OPAQUE\n");
     int i;
     NamedGPIOList *gpio_list = qdev_get_named_gpio_list(dev, name);
 
@@ -68,12 +71,14 @@ void qdev_init_gpio_in_named_with_opaque(DeviceState *dev,
 
 void qdev_init_gpio_in(DeviceState *dev, qemu_irq_handler handler, int n)
 {
+    trace_qdev_init_gpio_out_named("QDEV_INIT_GPIO_OUT_NAMED\n");
     qdev_init_gpio_in_named(dev, handler, NULL, n);
 }
 
 void qdev_init_gpio_out_named(DeviceState *dev, qemu_irq *pins,
                               const char *name, int n)
 {
+    trace_qdev_init_gpio_out_named("QDEV_INIT_GPIO_OUT_NAMED\n");
     int i;
     NamedGPIOList *gpio_list = qdev_get_named_gpio_list(dev, name);
 
@@ -98,11 +103,13 @@ void qdev_init_gpio_out_named(DeviceState *dev, qemu_irq *pins,
 
 void qdev_init_gpio_out(DeviceState *dev, qemu_irq *pins, int n)
 {
+    trace_qdev_init_gpio_out("QDEV_INIT_GPIO_OUT\n");
     qdev_init_gpio_out_named(dev, pins, NULL, n);
 }
 
 qemu_irq qdev_get_gpio_in_named(DeviceState *dev, const char *name, int n)
 {
+    trace_qdev_get_gpio_in_named("QDEV_GET_GPIO_IN_NAMED\n");
     NamedGPIOList *gpio_list = qdev_get_named_gpio_list(dev, name);
 
     assert(n >= 0 && n < gpio_list->num_in);
@@ -111,12 +118,14 @@ qemu_irq qdev_get_gpio_in_named(DeviceState *dev, const char *name, int n)
 
 qemu_irq qdev_get_gpio_in(DeviceState *dev, int n)
 {
+    trace_qdev_get_gpio_in("QDEV_GET_GPIO_IN\n");
     return qdev_get_gpio_in_named(dev, NULL, n);
 }
 
 void qdev_connect_gpio_out_named(DeviceState *dev, const char *name, int n,
                                  qemu_irq input_pin)
 {
+    trace_qdev_connect_gpio_out_named("QDEV_CONNECT_GPIO_OUT_NAMED\n");
     char *propname = g_strdup_printf("%s[%d]",
                                      name ? name : "unnamed-gpio-out", n);
     if (input_pin && !OBJECT(input_pin)->parent) {
@@ -132,6 +141,7 @@ void qdev_connect_gpio_out_named(DeviceState *dev, const char *name, int n,
 
 qemu_irq qdev_get_gpio_out_connector(DeviceState *dev, const char *name, int n)
 {
+    trace_qdev_get_gpio_out_connector("QDEV_GET_GPIO_OUT_CONNECTOR\n");
     g_autofree char *propname = g_strdup_printf("%s[%d]",
                                      name ? name : "unnamed-gpio-out", n);
 
@@ -146,6 +156,7 @@ qemu_irq qdev_get_gpio_out_connector(DeviceState *dev, const char *name, int n)
 static qemu_irq qdev_disconnect_gpio_out_named(DeviceState *dev,
                                                const char *name, int n)
 {
+    trace_qdev_disconnect_gpio_out_named("QDEV_DISCONNECT_GPIO_OUT_NAMED\n");
     char *propname = g_strdup_printf("%s[%d]",
                                      name ? name : "unnamed-gpio-out", n);
 
@@ -161,6 +172,7 @@ static qemu_irq qdev_disconnect_gpio_out_named(DeviceState *dev,
 qemu_irq qdev_intercept_gpio_out(DeviceState *dev, qemu_irq icpt,
                                  const char *name, int n)
 {
+    trace_qdev_intercept_gpio_out("QDEV_INTERCEPT_GPIO_OUT\n");
     qemu_irq disconnected = qdev_disconnect_gpio_out_named(dev, name, n);
     qdev_connect_gpio_out_named(dev, name, n, icpt);
     return disconnected;
@@ -168,12 +180,14 @@ qemu_irq qdev_intercept_gpio_out(DeviceState *dev, qemu_irq icpt,
 
 void qdev_connect_gpio_out(DeviceState *dev, int n, qemu_irq input_pin)
 {
+    trace_qdev_connect_gpio_out("QDEV_CONNECT_GPIO_OUT\n");
     qdev_connect_gpio_out_named(dev, NULL, n, input_pin);
 }
 
 void qdev_pass_gpios(DeviceState *dev, DeviceState *container,
                      const char *name)
 {
+    trace_qdev_pass_gpios("QDEV_PASS_GPIOS\n");
     int i;
     NamedGPIOList *ngl = qdev_get_named_gpio_list(dev, name);
 

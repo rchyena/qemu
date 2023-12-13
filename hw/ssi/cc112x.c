@@ -16,6 +16,7 @@
 #include "migration/vmstate.h"
 #include "qemu/module.h"
 #include "hw/qdev-properties.h"
+#include "trace.h"
 
 /* Control-byte bitfields */
 #define CB_PD0		(1 << 0)
@@ -34,7 +35,8 @@
 
 static uint32_t cc112x_read(CC112xState *s)
 {
-	printf("cc112x_read\n");
+	//printf("cc112x_read\n");
+    trace_cc112x_read("CC112X_READ\n");
     if (!s->tb1)
         return 0;
 
@@ -51,7 +53,8 @@ static uint32_t cc112x_read(CC112xState *s)
 /* Interpret a control-byte */
 static void cc112x_write(CC112xState *s, uint32_t value)
 {
-	printf("cc112x_write %x\n",value);
+    trace_cc112x_write("CC112X_WRITE\n");
+	//printf("cc112x_write %x\n",value);
     int measure, chan;
 
     /* Ignore the value if START bit is zero */
@@ -89,10 +92,11 @@ static void cc112x_write(CC112xState *s, uint32_t value)
 
 static uint32_t cc112x_transfer(SSIPeripheral *dev, uint32_t value)
 {
-    printf("cc112x_transfer\n");
+    trace_cc112x_transfer("CC112X_TRANSFER\n");
+    //printf("cc112x_transfer\n");
     CC112xState *s = CC_112X(dev);
     cc112x_write(s, value);
-	printf("cc112x_transfer %x\n",value);
+	//printf("cc112x_transfer %x\n",value);
     return cc112x_read(s);
 }
 
@@ -115,7 +119,7 @@ static const VMStateDescription vmstate_cc112x = {
 
 static void cc112x_input_set(void *opaque, int line, int value)
 {
-    printf("cc112x_input_set\n");
+    //printf("cc112x_input_set\n");
     CC112xState *s = CC_112X(opaque);
 
     assert(line >= 0 && line < s->inputs);
@@ -124,7 +128,7 @@ static void cc112x_input_set(void *opaque, int line, int value)
 
 static int cc112x_init(SSIPeripheral *d, int inputs)
 {
-	printf("cc112x_init\n");
+	//printf("cc112x_init\n");
     DeviceState *dev = DEVICE(d);
     CC112xState *s = CC_112X(dev);
 
@@ -140,13 +144,13 @@ static int cc112x_init(SSIPeripheral *d, int inputs)
 // 
 static void cc1120_realize(SSIPeripheral *dev, Error **errp)
 {
-	printf("cc1120_realize\n");
+	//printf("cc1120_realize\n");
     cc112x_init(dev, 4);
 }
 
 static void cc112x_reset(DeviceState *dev)
 {
-	printf("cc112x_reset\n");
+	//printf("cc112x_reset\n");
     CC112xState *s = CC_112X(dev);
     int i;
 
@@ -169,7 +173,7 @@ static Property cc1120_properties[] = {
 
 static void cc112x_class_init(ObjectClass *klass, void *data)
 {
-    printf("cc112x_class_init\n");
+    //printf("cc112x_class_init\n");
     SSIPeripheralClass *k = SSI_PERIPHERAL_CLASS(klass);
     DeviceClass *dc = DEVICE_CLASS(klass);
 
@@ -191,7 +195,7 @@ static const TypeInfo cc112x_info = {
 
 static void cc1120_class_init(ObjectClass *klass, void *data)
 {
-    printf("cc1120_class_init\n");
+    //printf("cc1120_class_init\n");
     SSIPeripheralClass *k = SSI_PERIPHERAL_CLASS(klass);
     DeviceClass *dc = DEVICE_CLASS(klass);
 

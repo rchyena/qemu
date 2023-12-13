@@ -28,3 +28,13 @@ npcm7xx_fiu_flash_write(const char *id, unsigned cs, uint64_t addr, unsigned int
 # stm32f2xx_spi.c
 stm32f2xx_spi_write(uint32_t value) "[SPI WRITE] value: 0x%llx"
 stm32f2xx_spi_read(uint32_t value) "[SPI READ] value: 0x%x"
+stm32f2xx_spi_reset(const char *status) "%s"
+stm32f2xx_spi_transfer(const char *status) "%s"
+stm32f2xx_spi_init(const char *status) "%s"
+stm32f2xx_spi_class_init(const char *status) "%s"
+stm32f2xx_spi_register_types(const char *status) "%s"
+
+# cc112x.c
+cc112x_read(const char *status) "%s"
+cc112x_write(const char *status) "%s"
+cc112x_transfer(const char *status) "%s"

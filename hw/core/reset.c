@@ -26,6 +26,7 @@
 #include "qemu/osdep.h"
 #include "qemu/queue.h"
 #include "sysemu/reset.h"
+#include "trace.h"
 
 /* reset/shutdown handler */
 
@@ -41,6 +42,7 @@ static QTAILQ_HEAD(, QEMUResetEntry) reset_handlers =
 void qemu_register_reset(QEMUResetHandler *func, void *opaque)
 {
     //printf("qemu_register_reset\n");
+    trace_qemu_register_reset("QEMU_REGISTER_RESET\n");
     QEMUResetEntry *re = g_malloc0(sizeof(QEMUResetEntry));
 
     re->func = func;
@@ -50,6 +52,7 @@ void qemu_register_reset(QEMUResetHandler *func, void *opaque)
 
 void qemu_unregister_reset(QEMUResetHandler *func, void *opaque)
 {
+    trace_qemu_unregister_reset("QEMU_UNREGISTER_RESET\n");
     QEMUResetEntry *re;
 
     QTAILQ_FOREACH(re, &reset_handlers, entry) {
@@ -63,6 +66,7 @@ void qemu_unregister_reset(QEMUResetHandler *func, void *opaque)
 
 void qemu_devices_reset(void)
 {
+    trace_qemu_devices_reset("QEMU_DEVICES\n");
     QEMUResetEntry *re, *nre;
 
     /* reset all devices */

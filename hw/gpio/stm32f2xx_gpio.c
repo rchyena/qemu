@@ -26,6 +26,7 @@
 #include "qemu/error-report.h"
 #include "qemu/module.h"
 #include "qapi/error.h"
+#include "trace.h"
 
 struct stm32f2xx_gpio_s {
     qemu_irq irq;
@@ -52,6 +53,7 @@ struct stm32f2xx_gpif_s {
 /* General-Purpose I/O of stm32f2xx1 */
 static void stm32f2xx_gpio_set(void *opaque, int line, int level)
 {
+    trace_stm32f2xx_gpio_set("STM32F2XX_GPIO_SET\n");
     struct stm32f2xx_gpio_s *s = &((struct stm32f2xx_gpif_s *) opaque)->stm32f2xx1;
     uint16_t prev = s->inputs;
 
@@ -70,6 +72,7 @@ static void stm32f2xx_gpio_set(void *opaque, int line, int level)
 static uint64_t stm32f2xx_gpio_read(void *opaque, hwaddr addr,
                                unsigned size)
 {
+    trace_stm32f2xx_gpio_read("STM32F2XX_GPIO_READ\n");
     struct stm32f2xx_gpio_s *s = (struct stm32f2xx_gpio_s *) opaque;
     int offset = addr & stm32f2xx_MPUI_REG_MASK;
 
@@ -108,6 +111,7 @@ static uint64_t stm32f2xx_gpio_read(void *opaque, hwaddr addr,
 static void stm32f2xx_gpio_write(void *opaque, hwaddr addr,
                             uint64_t value, unsigned size)
 {
+    trace_stm32f2xx_gpio_write("STM32F2XX_GPIO_WRITE\n");
     struct stm32f2xx_gpio_s *s = (struct stm32f2xx_gpio_s *) opaque;
     int offset = addr & stm32f2xx_MPUI_REG_MASK;
     uint16_t diff;
@@ -179,6 +183,7 @@ static const MemoryRegionOps stm32f2xx_gpio_ops = {
 
 static void stm32f2xx_gpio_reset(struct stm32f2xx_gpio_s *s)
 {
+    trace_stm32f2xx_gpio_reset("STM32F2XX_GPIO_RESET\n");
     s->inputs = 0;
     s->outputs = ~0;
     s->dir = ~0;
@@ -226,11 +231,13 @@ struct stm32f2xx2_gpif_s {
 static inline void stm32f2xx2_gpio_module_int_update(struct stm32f2xx2_gpio_s *s,
                                                 int line)
 {
+    trace_stm32f2xx2_gpio_module_int_update("STM32F2XX2_GPIO_MODULE_INT_UPDATE\n");
     qemu_set_irq(s->irq[line], s->ints[line] & s->mask[line]);
 }
 
 static void stm32f2xx2_gpio_module_wake(struct stm32f2xx2_gpio_s *s, int line)
 {
+    trace_stm32f2xx2_gpio_module_wake("STM32F2XX2_GPIO_MODULE_WAKE\n");
     if (!(s->config[0] & (1 << 2)))			/* ENAWAKEUP */
         return;
     if (!(s->config[0] & (3 << 3)))			/* Force Idle */
@@ -244,6 +251,7 @@ static void stm32f2xx2_gpio_module_wake(struct stm32f2xx2_gpio_s *s, int line)
 static inline void stm32f2xx2_gpio_module_out_update(struct stm32f2xx2_gpio_s *s,
                 uint32_t diff)
 {
+    trace_stm32f2xx2_gpio_module_out_update("STM32F2XX2_GPIO_MODULE_OUT_UPDATE\n");
     int ln;
 
     s->outputs ^= diff;
@@ -256,6 +264,7 @@ static inline void stm32f2xx2_gpio_module_out_update(struct stm32f2xx2_gpio_s *s
 
 static void stm32f2xx2_gpio_module_level_update(struct stm32f2xx2_gpio_s *s, int line)
 {
+    trace_stm32f2xx2_gpio_module_level_update("STM32F2XX2_GPIO_MODULE_LEVEL_UPDATE\n");
     s->ints[line] |= s->dir &
             ((s->inputs & s->level[1]) | (~s->inputs & s->level[0]));
     stm32f2xx2_gpio_module_int_update(s, line);
@@ -263,6 +272,7 @@ static void stm32f2xx2_gpio_module_level_update(struct stm32f2xx2_gpio_s *s, int
 
 static inline void stm32f2xx2_gpio_module_int(struct stm32f2xx2_gpio_s *s, int line)
 {
+    trace_stm32f2xx2_gpio_module_int("STM32F2XX2_GPIO_MODULE_INT\n");
     s->ints[0] |= 1 << line;
     stm32f2xx2_gpio_module_int_update(s, 0);
     s->ints[1] |= 1 << line;
@@ -272,6 +282,7 @@ static inline void stm32f2xx2_gpio_module_int(struct stm32f2xx2_gpio_s *s, int l
 
 static void stm32f2xx2_gpio_set(void *opaque, int line, int level)
 {
+    trace_stm32f2xx2_gpio_set("STM32F2XX2_GPIO_SET\n");
     struct stm32f2xx2_gpif_s *p = opaque;
     struct stm32f2xx2_gpio_s *s = &p->modules[line >> 5];
 
@@ -289,6 +300,7 @@ static void stm32f2xx2_gpio_set(void *opaque, int line, int level)
 
 static void stm32f2xx2_gpio_module_reset(struct stm32f2xx2_gpio_s *s)
 {
+    trace_stm32f2xx2_gpio_module_reset("STM32F2XX2_GPIO_MODULE_RESET\n");
     s->config[0] = 0;
     s->config[1] = 2;
     s->ints[0] = 0;
@@ -307,6 +319,7 @@ static void stm32f2xx2_gpio_module_reset(struct stm32f2xx2_gpio_s *s)
 
 static uint32_t stm32f2xx2_gpio_module_read(void *opaque, hwaddr addr)
 {
+    trace_stm32f2xx2_gpio_module_read("STM32F2XX2_GPIO_MODULE_READ\n");
     struct stm32f2xx2_gpio_s *s = (struct stm32f2xx2_gpio_s *) opaque;
 
     switch (addr) {
@@ -380,6 +393,7 @@ static uint32_t stm32f2xx2_gpio_module_read(void *opaque, hwaddr addr)
 static void stm32f2xx2_gpio_module_write(void *opaque, hwaddr addr,
                 uint32_t value)
 {
+    trace_stm32f2xx2_gpio_module_write("STM32F2XX2_GPIO_MODULE_WRITE\n");
     struct stm32f2xx2_gpio_s *s = (struct stm32f2xx2_gpio_s *) opaque;
     uint32_t diff;
     int ln;
@@ -524,12 +538,14 @@ static void stm32f2xx2_gpio_module_write(void *opaque, hwaddr addr,
 static uint64_t stm32f2xx2_gpio_module_readp(void *opaque, hwaddr addr,
                                         unsigned size)
 {
+    trace_stm32f2xx2_gpio_module_readp("STM32F2XX2_GPIO_MODULE_READP\n");
     return stm32f2xx2_gpio_module_read(opaque, addr & ~3) >> ((addr & 3) << 3);
 }
 
 static void stm32f2xx2_gpio_module_writep(void *opaque, hwaddr addr,
                                      uint64_t value, unsigned size)
 {
+    trace_stm32f2xx2_gpio_module_writep("STM32F2XX2_GPIO_MODULE_WRITEP\n");
     uint32_t cur = 0;
     uint32_t mask = 0xffff;
 
@@ -592,6 +608,7 @@ static const MemoryRegionOps stm32f2xx2_gpio_module_ops = {
 
 static void stm32f2xx_gpif_reset(DeviceState *dev)
 {
+    trace_stm32f2xx_gpif_reset("STM32F2XX_GPIF_RESET\n");
     struct stm32f2xx_gpif_s *s = stm32f2xx1_GPIO(dev);
 
     stm32f2xx_gpio_reset(&s->stm32f2xx1);
@@ -599,6 +616,7 @@ static void stm32f2xx_gpif_reset(DeviceState *dev)
 
 static void stm32f2xx2_gpif_reset(DeviceState *dev)
 {
+    trace_stm32f2xx2_gpif_reset("STM32F2XX2_GPIF_RESET\n");
     struct stm32f2xx2_gpif_s *s = stm32f2xx2_GPIO(dev);
     int i;
 
@@ -612,6 +630,7 @@ static void stm32f2xx2_gpif_reset(DeviceState *dev)
 static uint64_t stm32f2xx2_gpif_top_read(void *opaque, hwaddr addr,
                                     unsigned size)
 {
+    trace_stm32f2xx2_gpif_top_read("STM32F2XX2_GPIF_TOP_READ\n");
     struct stm32f2xx2_gpif_s *s = (struct stm32f2xx2_gpif_s *) opaque;
 
     switch (addr) {
@@ -641,6 +660,7 @@ static uint64_t stm32f2xx2_gpif_top_read(void *opaque, hwaddr addr,
 static void stm32f2xx2_gpif_top_write(void *opaque, hwaddr addr,
                                  uint64_t value, unsigned size)
 {
+    trace_stm32f2xx2_gpif_top_write("STM32F2XX2_GPIF_TOP_WRITE\n");
     struct stm32f2xx2_gpif_s *s = (struct stm32f2xx2_gpif_s *) opaque;
 
     switch (addr) {
@@ -675,6 +695,7 @@ static const MemoryRegionOps stm32f2xx2_gpif_top_ops = {
 
 static void stm32f2xx_gpio_init(Object *obj)
 {
+    trace_stm32f2xx_gpio_init("STM32F2XX_GPIO_INIT\n");
     DeviceState *dev = DEVICE(obj);
     struct stm32f2xx_gpif_s *s = stm32f2xx1_GPIO(obj);
     SysBusDevice *sbd = SYS_BUS_DEVICE(obj);
@@ -689,6 +710,7 @@ static void stm32f2xx_gpio_init(Object *obj)
 
 static void stm32f2xx_gpio_realize(DeviceState *dev, Error **errp)
 {
+    trace_stm32f2xx_gpio_realize("STM32F2XX_GPIO_REALIZE\n");
     struct stm32f2xx_gpif_s *s = stm32f2xx1_GPIO(dev);
 
     if (!s->clk) {
@@ -698,6 +720,7 @@ static void stm32f2xx_gpio_realize(DeviceState *dev, Error **errp)
 
 static void stm32f2xx2_gpio_realize(DeviceState *dev, Error **errp)
 {
+    trace_stm32f2xx2_gpio_realize("STM32F2XX2_GPIO_REALIZE\n");
     struct stm32f2xx2_gpif_s *s = stm32f2xx2_GPIO(dev);
     SysBusDevice *sbd = SYS_BUS_DEVICE(dev);
     int i;
@@ -743,6 +766,7 @@ static void stm32f2xx2_gpio_realize(DeviceState *dev, Error **errp)
 
 void stm32f2xx_gpio_set_clk(stm32f2xx_gpif *gpio, stm32f2xx_clk clk)
 {
+    trace_stm32f2xx_gpio_set_clk("STM32F2XX_GPIO_SET_CLK\n");
     gpio->clk = clk;
 }
 
@@ -753,6 +777,7 @@ static Property stm32f2xx_gpio_properties[] = {
 
 static void stm32f2xx_gpio_class_init(ObjectClass *klass, void *data)
 {
+    trace_stm32f2xx_gpio_class_init("STM32F2XX_GPIO_CLASS_INIT\n");
     DeviceClass *dc = DEVICE_CLASS(klass);
 
     dc->realize = stm32f2xx_gpio_realize;
@@ -772,11 +797,13 @@ static const TypeInfo stm32f2xx_gpio_info = {
 
 void stm32f2xx2_gpio_set_iclk(stm32f2xx2_gpif *gpio, stm32f2xx_clk clk)
 {
+    trace_stm32f2xx2_gpio_set_iclk("STM32F2XX2_GPIO_SET_ICLK\n");
     gpio->iclk = clk;
 }
 
 void stm32f2xx2_gpio_set_fclk(stm32f2xx2_gpif *gpio, uint8_t i, stm32f2xx_clk clk)
 {
+    trace_stm32f2xx2_gpio_set_fclk("STM32F2XX2_GPIO_SET_FCLK\n");
     assert(i <= 5);
     gpio->fclk[i] = clk;
 }
@@ -788,6 +815,7 @@ static Property stm32f2xx2_gpio_properties[] = {
 
 static void stm32f2xx2_gpio_class_init(ObjectClass *klass, void *data)
 {
+    trace_stm32f2xx2_gpio_class_init("STM32F2XX2_GPIO_CLASS_INIT\n");
     DeviceClass *dc = DEVICE_CLASS(klass);
 
     dc->realize = stm32f2xx2_gpio_realize;
@@ -806,6 +834,7 @@ static const TypeInfo stm32f2xx2_gpio_info = {
 
 static void stm32f2xx_gpio_register_types(void)
 {
+    trace_stm32f2xx_gpio_register_types("STM32F2XX_GPIO_REGISTER_TYPES\n");
     type_register_static(&stm32f2xx_gpio_info);
     type_register_static(&stm32f2xx2_gpio_info);
 }

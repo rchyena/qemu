@@ -30,12 +30,14 @@
 #include "sysemu/watchdog.h"
 #include "hw/nmi.h"
 #include "qemu/help_option.h"
+#include "trace.h"
 
 static WatchdogAction watchdog_action = WATCHDOG_ACTION_RESET;
 static QLIST_HEAD(, WatchdogTimerModel) watchdog_list;
 
 void watchdog_add_model(WatchdogTimerModel *model)
 {
+    trace_watchdog_add_model("IWDG_ADD_MODEL\n");
     QLIST_INSERT_HEAD(&watchdog_list, model, entry);
 }
 
@@ -46,6 +48,7 @@ void watchdog_add_model(WatchdogTimerModel *model)
  */
 int select_watchdog(const char *p)
 {
+    trace_select_watchdog("SELECT_IWDG\n");
     WatchdogTimerModel *model;
     QemuOpts *opts;
 
@@ -78,6 +81,7 @@ int select_watchdog(const char *p)
 
 WatchdogAction get_watchdog_action(void)
 {
+    trace_get_watchdog_action("GET_IWDG_ACTION\n");
     return watchdog_action;
 }
 
@@ -86,7 +90,8 @@ WatchdogAction get_watchdog_action(void)
  */
 void watchdog_perform_action(void)
 {
-    printf("watchdog_perform_action\n");
+    //printf("watchdog_perform_action\n");
+    trace_watchdog_perform_action("IWDG_PERFORM_ACTION\n");
     switch (watchdog_action) {
     case WATCHDOG_ACTION_RESET:     /* same as 'system_reset' in monitor */
         qapi_event_send_watchdog(WATCHDOG_ACTION_RESET);
@@ -132,5 +137,6 @@ void watchdog_perform_action(void)
 
 void qmp_watchdog_set_action(WatchdogAction action, Error **errp)
 {
+    trace_qmp_watchdog_set_action("IWDG_SET_ACTION\n");
     watchdog_action = action;
 }

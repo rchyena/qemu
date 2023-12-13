@@ -29,6 +29,7 @@
 #include "hw/qdev-properties-system.h"
 #include "qemu/log.h"
 #include "qemu/module.h"
+#include "trace.h"
 
 #ifndef STM_USART_ERR_DEBUG
 #define STM_USART_ERR_DEBUG 0
@@ -44,6 +45,7 @@
 
 static int stm32f2xx_usart_can_receive(void *opaque)
 {
+    trace_stm32f2xx_usart_can_receive("STM32F2XX_USART_CAN_RECEIVE\n");
     STM32F2XXUsartState *s = opaque;
 
     if (!(s->usart_sr & USART_SR_RXNE)) {
@@ -55,6 +57,7 @@ static int stm32f2xx_usart_can_receive(void *opaque)
 
 static void stm32f2xx_usart_receive(void *opaque, const uint8_t *buf, int size)
 {
+    trace_stm32f2xx_usart_receive("STM32F2XX_USART_RECEIVE\n");
     STM32F2XXUsartState *s = opaque;
 
     if (!(s->usart_cr1 & USART_CR1_UE && s->usart_cr1 & USART_CR1_RE)) {
@@ -75,6 +78,7 @@ static void stm32f2xx_usart_receive(void *opaque, const uint8_t *buf, int size)
 
 static void stm32f2xx_usart_reset(DeviceState *dev)
 {
+    trace_stm32f2xx_usart_reset("STM32F2XX_USART_RESET\n");
     STM32F2XXUsartState *s = STM32F2XX_USART(dev);
 
     s->usart_sr = USART_SR_RESET;
@@ -91,6 +95,7 @@ static void stm32f2xx_usart_reset(DeviceState *dev)
 static uint64_t stm32f2xx_usart_read(void *opaque, hwaddr addr,
                                        unsigned int size)
 {
+    trace_stm32f2xx_usart_read("STM32F2XX_USART_READ\n");
     STM32F2XXUsartState *s = opaque;
     uint64_t retvalue;
 
@@ -130,6 +135,7 @@ static uint64_t stm32f2xx_usart_read(void *opaque, hwaddr addr,
 static void stm32f2xx_usart_write(void *opaque, hwaddr addr,
                                   uint64_t val64, unsigned int size)
 {
+    trace_stm32f2xx_usart_write("STM32F2XX_USART_WRITE\n");
     STM32F2XXUsartState *s = opaque;
     uint32_t value = val64;
     unsigned char ch;
@@ -201,6 +207,7 @@ static Property stm32f2xx_usart_properties[] = {
 
 static void stm32f2xx_usart_init(Object *obj)
 {
+    trace_stm32f2xx_usart_init("STM32F2XX_USART_INIT\n");
     STM32F2XXUsartState *s = STM32F2XX_USART(obj);
 
     sysbus_init_irq(SYS_BUS_DEVICE(obj), &s->irq);
@@ -212,6 +219,7 @@ static void stm32f2xx_usart_init(Object *obj)
 
 static void stm32f2xx_usart_realize(DeviceState *dev, Error **errp)
 {
+    trace_stm32f2xx_usart_realize("STM32F2XX_USART_REALIZE\n");
     STM32F2XXUsartState *s = STM32F2XX_USART(dev);
 
     qemu_chr_fe_set_handlers(&s->chr, stm32f2xx_usart_can_receive,
@@ -221,6 +229,7 @@ static void stm32f2xx_usart_realize(DeviceState *dev, Error **errp)
 
 static void stm32f2xx_usart_class_init(ObjectClass *klass, void *data)
 {
+    trace_stm32f2xx_usart_class_init("STM32F2XX_USART_CLASS_INIT\n");
     DeviceClass *dc = DEVICE_CLASS(klass);
 
     dc->reset = stm32f2xx_usart_reset;
@@ -238,6 +247,7 @@ static const TypeInfo stm32f2xx_usart_info = {
 
 static void stm32f2xx_usart_register_types(void)
 {
+    trace_stm32f2xx_usart_register_types("STM32F2XX_USART_REGISTER_TYPES\n");
     type_register_static(&stm32f2xx_usart_info);
 }
 

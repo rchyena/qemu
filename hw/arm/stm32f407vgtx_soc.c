@@ -382,6 +382,7 @@ static Property stm32f407vgtx_soc_properties[] = {
 
 static void stm32f407vgtx_soc_class_init(ObjectClass *klass, void *data)
 {
+    trace_stm32f407vgtx_soc_class_init("CLASS_INIT\n");
     DeviceClass *dc = DEVICE_CLASS(klass);
 
     dc->realize = stm32f407vgtx_soc_realize;
@@ -399,6 +400,7 @@ static const TypeInfo stm32f407vgtx_soc_info = {
 
 static void stm32f407vgtx_soc_types(void)
 {
+    trace_stm32f407vgtx_soc_types("SOC_TYPES\n");
     type_register_static(&stm32f407vgtx_soc_info);
 }
 

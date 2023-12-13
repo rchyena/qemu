@@ -2436,6 +2436,8 @@ trace_events_subdirs = [
   'qom',
   'monitor',
   'util',
+  'hw/arm',
+  'hw/ssi',
 ]
 if have_user
   trace_events_subdirs += [ 'linux-user' ]
@@ -2451,8 +2453,6 @@ if have_block
 endif
 if have_system
   trace_events_subdirs += [
-    'hw/arm',
-    'hw/ssi',
     'accel/kvm',
     'audio',
     'backends',

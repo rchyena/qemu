@@ -29,6 +29,7 @@
 #include "migration/vmstate.h"
 #include "qemu/log.h"
 #include "qemu/module.h"
+#include "trace.h"
 
 #ifndef STM_TIMER_ERR_DEBUG
 #define STM_TIMER_ERR_DEBUG 0
@@ -46,6 +47,7 @@ static void stm32f2xx_timer_set_alarm(STM32F2XXTimerState *s, int64_t now);
 
 static void stm32f2xx_timer_interrupt(void *opaque)
 {
+    trace_stm32f2xx_timer_interrupt("STM32F2XX_TIMER_INTERRUPT\n");
     //printf("stm32f2xx_timer_interrupt\n");
     STM32F2XXTimerState *s = opaque;
 
@@ -69,12 +71,14 @@ static void stm32f2xx_timer_interrupt(void *opaque)
 
 static inline int64_t stm32f2xx_ns_to_ticks(STM32F2XXTimerState *s, int64_t t)
 {
+    trace_stm32f2xx_ns_to_ticks("STM32F2XX_NS_TO_TICKS\n");
     //printf("stm32f2xx_timer_ns_to_ticks\n");
     return muldiv64(t, s->freq_hz, 1000000000ULL) / (s->tim_psc + 1);
 }
 
 static void stm32f2xx_timer_set_alarm(STM32F2XXTimerState *s, int64_t now)
 {
+    trace_stm32f2xx_timer_set_alarm("STM32F2XX_TIMER_SET_ALARM\n");
     printf("stm32f2xx_timer_set_alarm\n");
     uint64_t ticks;
     int64_t now_ticks;
@@ -99,6 +103,7 @@ static void stm32f2xx_timer_set_alarm(STM32F2XXTimerState *s, int64_t now)
 
 static void stm32f2xx_timer_reset(DeviceState *dev)
 {
+    trace_stm32f2xx_timer_reset("STM32F2XX_TIMER_RESET\n");
     //printf("stm32f2xx_timer_reset\n");
     STM32F2XXTimerState *s = STM32F2XXTIMER(dev);
     int64_t now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
@@ -128,6 +133,7 @@ static void stm32f2xx_timer_reset(DeviceState *dev)
 static uint64_t stm32f2xx_timer_read(void *opaque, hwaddr offset,
                            unsigned size)
 {
+    trace_stm32f2xx_timer_read("STM32F2XX_TIMER_READ\n");
     //printf("stm32f2xx_timer_read\n");
     STM32F2XXTimerState *s = opaque;
 
@@ -184,6 +190,7 @@ static uint64_t stm32f2xx_timer_read(void *opaque, hwaddr offset,
 static void stm32f2xx_timer_write(void *opaque, hwaddr offset,
                         uint64_t val64, unsigned size)
 {
+    trace_stm32f2xx_timer_write("STM32F2XX_TIMER_WRITE\n");
     //printf("stm32fxx_timer_write\n");
     STM32F2XXTimerState *s = opaque;
     uint32_t value = val64;
@@ -312,6 +319,7 @@ static Property stm32f2xx_timer_properties[] = {
 
 static void stm32f2xx_timer_init(Object *obj)
 {
+    trace_stm32f2xx_timer_init("STM32F2XX_TIMER_INIT\n");
     //printf("stm32fxx_timer_init\n");
     STM32F2XXTimerState *s = STM32F2XXTIMER(obj);
 
@@ -324,12 +332,14 @@ static void stm32f2xx_timer_init(Object *obj)
 
 static void stm32f2xx_timer_realize(DeviceState *dev, Error **errp)
 {
+    trace_stm32f2xx_timer_realize("STM32F2XX_TIMER_REALIZE\n");
     STM32F2XXTimerState *s = STM32F2XXTIMER(dev);
     s->timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, stm32f2xx_timer_interrupt, s);
 }
 
 static void stm32f2xx_timer_class_init(ObjectClass *klass, void *data)
 {
+    trace_stm32f2xx_timer_class_init("STM32F2XX_TIMER_CLASS_INIT\n");
     DeviceClass *dc = DEVICE_CLASS(klass);
 
     dc->reset = stm32f2xx_timer_reset;
@@ -348,6 +358,7 @@ static const TypeInfo stm32f2xx_timer_info = {
 
 static void stm32f2xx_timer_register_types(void)
 {
+    trace_stm32f2xx_timer_register_types("STM32F2XX_TIMER_REGISTER_TYPES\n");
     type_register_static(&stm32f2xx_timer_info);
 }
 

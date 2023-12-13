@@ -36,6 +36,7 @@
 #include "exec/confidential-guest-support.h"
 #include "hw/virtio/virtio.h"
 #include "hw/virtio/virtio-pci.h"
+#include "trace.h"
 
 GlobalProperty hw_compat_6_2[] = {};
 const size_t hw_compat_6_2_len = G_N_ELEMENTS(hw_compat_6_2);
@@ -255,6 +256,7 @@ MachineState *current_machine;
 
 static char *machine_get_kernel(Object *obj, Error **errp)
 {
+    trace_machine_get_kernel("MACHINE_GET_KERNEL\n");
     MachineState *ms = MACHINE(obj);
 
     return g_strdup(ms->kernel_filename);
@@ -262,6 +264,7 @@ static char *machine_get_kernel(Object *obj, Error **errp)
 
 static void machine_set_kernel(Object *obj, const char *value, Error **errp)
 {
+    trace_machine_set_kernel("MACHINE_SET_KERNEL\n");
     MachineState *ms = MACHINE(obj);
 
     g_free(ms->kernel_filename);
@@ -270,6 +273,7 @@ static void machine_set_kernel(Object *obj, const char *value, Error **errp)
 
 static char *machine_get_initrd(Object *obj, Error **errp)
 {
+    trace_machine_get_initrd("MACHINE_GET_INITRD\n");
     MachineState *ms = MACHINE(obj);
 
     return g_strdup(ms->initrd_filename);
@@ -277,6 +281,7 @@ static char *machine_get_initrd(Object *obj, Error **errp)
 
 static void machine_set_initrd(Object *obj, const char *value, Error **errp)
 {
+    trace_machine_set_initrd("MACHINE_SET_INITRD\n");
     MachineState *ms = MACHINE(obj);
 
     g_free(ms->initrd_filename);
@@ -285,6 +290,7 @@ static void machine_set_initrd(Object *obj, const char *value, Error **errp)
 
 static char *machine_get_append(Object *obj, Error **errp)
 {
+    trace_machine_get_append("MACHINE_GET_APPEND\n");
     MachineState *ms = MACHINE(obj);
 
     return g_strdup(ms->kernel_cmdline);
@@ -292,6 +298,7 @@ static char *machine_get_append(Object *obj, Error **errp)
 
 static void machine_set_append(Object *obj, const char *value, Error **errp)
 {
+    trace_machine_set_append("MACHINE_SET_APPEND\n");
     MachineState *ms = MACHINE(obj);
 
     g_free(ms->kernel_cmdline);
@@ -300,6 +307,7 @@ static void machine_set_append(Object *obj, const char *value, Error **errp)
 
 static char *machine_get_dtb(Object *obj, Error **errp)
 {
+    trace_machine_get_dtb("MACHINE_GET_DTB\n");
     MachineState *ms = MACHINE(obj);
 
     return g_strdup(ms->dtb);
@@ -307,6 +315,7 @@ static char *machine_get_dtb(Object *obj, Error **errp)
 
 static void machine_set_dtb(Object *obj, const char *value, Error **errp)
 {
+    trace_machine_set_dtb("MACHINE_SET_DTB\n");
     MachineState *ms = MACHINE(obj);
 
     g_free(ms->dtb);
@@ -315,6 +324,7 @@ static void machine_set_dtb(Object *obj, const char *value, Error **errp)
 
 static char *machine_get_dumpdtb(Object *obj, Error **errp)
 {
+    trace_machine_get_dumpdtb("MACHINE_GET_DUMPDTB\n");
     MachineState *ms = MACHINE(obj);
 
     return g_strdup(ms->dumpdtb);
@@ -322,6 +332,7 @@ static char *machine_get_dumpdtb(Object *obj, Error **errp)
 
 static void machine_set_dumpdtb(Object *obj, const char *value, Error **errp)
 {
+    trace_machine_set_dumpdtb("MACHINE_SET_DUMPDTB\n");
     MachineState *ms = MACHINE(obj);
 
     g_free(ms->dumpdtb);
@@ -332,6 +343,7 @@ static void machine_get_phandle_start(Object *obj, Visitor *v,
                                       const char *name, void *opaque,
                                       Error **errp)
 {
+    trace_machine_get_phandle_start("MACHINE_GET_PHANDLE_START\n");
     MachineState *ms = MACHINE(obj);
     int64_t value = ms->phandle_start;
 
@@ -342,6 +354,7 @@ static void machine_set_phandle_start(Object *obj, Visitor *v,
                                       const char *name, void *opaque,
                                       Error **errp)
 {
+    trace_machine_set_phandle_start("MACHINE_SET_PHANDLE_START\n");
     MachineState *ms = MACHINE(obj);
     int64_t value;
 
@@ -354,6 +367,7 @@ static void machine_set_phandle_start(Object *obj, Visitor *v,
 
 static char *machine_get_dt_compatible(Object *obj, Error **errp)
 {
+    trace_machine_get_dt_compatible("MACHINE_GET_DT_COMPATIBLE\n");
     MachineState *ms = MACHINE(obj);
 
     return g_strdup(ms->dt_compatible);
@@ -361,6 +375,7 @@ static char *machine_get_dt_compatible(Object *obj, Error **errp)
 
 static void machine_set_dt_compatible(Object *obj, const char *value, Error **errp)
 {
+    trace_machine_set_dt_compatible("MACHINE_SET_DT_COMPATIBLE\n");
     MachineState *ms = MACHINE(obj);
 
     g_free(ms->dt_compatible);
@@ -369,6 +384,7 @@ static void machine_set_dt_compatible(Object *obj, const char *value, Error **er
 
 static bool machine_get_dump_guest_core(Object *obj, Error **errp)
 {
+    trace_machine_get_dump_guest_core("MACHINE_GET_DUMP_GUEST_CORE\n");
     MachineState *ms = MACHINE(obj);
 
     return ms->dump_guest_core;
@@ -376,6 +392,7 @@ static bool machine_get_dump_guest_core(Object *obj, Error **errp)
 
 static void machine_set_dump_guest_core(Object *obj, bool value, Error **errp)
 {
+    trace_machine_set_dump_guest_core("MACHINE_SET_DUMP_GUEST_CORE\n");
     MachineState *ms = MACHINE(obj);
 
     ms->dump_guest_core = value;
@@ -383,6 +400,7 @@ static void machine_set_dump_guest_core(Object *obj, bool value, Error **errp)
 
 static bool machine_get_mem_merge(Object *obj, Error **errp)
 {
+    trace_machine_get_mem_merge("MACHINE_GET_MEM_MERGE\n");
     MachineState *ms = MACHINE(obj);
 
     return ms->mem_merge;
@@ -390,6 +408,7 @@ static bool machine_get_mem_merge(Object *obj, Error **errp)
 
 static void machine_set_mem_merge(Object *obj, bool value, Error **errp)
 {
+    trace_machine_set_mem_merge("MACHINE_SET_MEM_MERGE\n");
     MachineState *ms = MACHINE(obj);
 
     ms->mem_merge = value;
@@ -397,6 +416,7 @@ static void machine_set_mem_merge(Object *obj, bool value, Error **errp)
 
 static bool machine_get_usb(Object *obj, Error **errp)
 {
+    trace_machine_get_usb("MACHINE_GET_USB\n");
     MachineState *ms = MACHINE(obj);
 
     return ms->usb;
@@ -404,6 +424,7 @@ static bool machine_get_usb(Object *obj, Error **errp)
 
 static void machine_set_usb(Object *obj, bool value, Error **errp)
 {
+    trace_machine_set_usb("MACHINE_SET_USB\n");
     MachineState *ms = MACHINE(obj);
 
     ms->usb = value;
@@ -412,6 +433,7 @@ static void machine_set_usb(Object *obj, bool value, Error **errp)
 
 static bool machine_get_graphics(Object *obj, Error **errp)
 {
+    trace_machine_get_graphics("MACHINE_GET_GRAPHICS\n");
     MachineState *ms = MACHINE(obj);
 
     return ms->enable_graphics;
@@ -419,6 +441,7 @@ static bool machine_get_graphics(Object *obj, Error **errp)
 
 static void machine_set_graphics(Object *obj, bool value, Error **errp)
 {
+    trace_machine_get_graphics("MACHINE_SET_GRAPHICS\n");
     MachineState *ms = MACHINE(obj);
 
     ms->enable_graphics = value;
@@ -426,6 +449,7 @@ static void machine_set_graphics(Object *obj, bool value, Error **errp)
 
 static char *machine_get_firmware(Object *obj, Error **errp)
 {
+    trace_machine_get_firmware("MACHINE_GET_FIRMWARE\n");
     MachineState *ms = MACHINE(obj);
 
     return g_strdup(ms->firmware);
@@ -433,6 +457,7 @@ static char *machine_get_firmware(Object *obj, Error **errp)
 
 static void machine_set_firmware(Object *obj, const char *value, Error **errp)
 {
+    trace_machine_set_firmware("MACHINE_SET_FIRMWARE\n");
     MachineState *ms = MACHINE(obj);
 
     g_free(ms->firmware);
@@ -441,6 +466,7 @@ static void machine_set_firmware(Object *obj, const char *value, Error **errp)
 
 static void machine_set_suppress_vmdesc(Object *obj, bool value, Error **errp)
 {
+    trace_machine_set_suppress_vmdesc("MACHINE_SET_SUPPRESS_VMDESC\n");
     MachineState *ms = MACHINE(obj);
 
     ms->suppress_vmdesc = value;
@@ -448,6 +474,7 @@ static void machine_set_suppress_vmdesc(Object *obj, bool value, Error **errp)
 
 static bool machine_get_suppress_vmdesc(Object *obj, Error **errp)
 {
+    trace_machine_get_suppress_vmdesc("MACHINE_GET_SUPPRESS_VMDESC\n");
     MachineState *ms = MACHINE(obj);
 
     return ms->suppress_vmdesc;
@@ -455,6 +482,7 @@ static bool machine_get_suppress_vmdesc(Object *obj, Error **errp)
 
 static char *machine_get_memory_encryption(Object *obj, Error **errp)
 {
+    trace_machine_get_memory_encryption("MACHINE_GET_MEMORY_ENCRYPTION\n");
     MachineState *ms = MACHINE(obj);
 
     if (ms->cgs) {
@@ -467,6 +495,7 @@ static char *machine_get_memory_encryption(Object *obj, Error **errp)
 static void machine_set_memory_encryption(Object *obj, const char *value,
                                         Error **errp)
 {
+    trace_machine_set_memory_encryption("MACHINE_SET_MEMORY_ENCRYPTION\n");
     Object *cgs =
         object_resolve_path_component(object_get_objects_root(), value);
 
@@ -488,10 +517,12 @@ static void machine_check_confidential_guest_support(const Object *obj,
      * TYPE_CONFIDENTIAL_GUEST_SUPPORT interface, and that's checked
      * by the QOM core
      */
+    trace_machine_check_confidential_guest_support("MACHINE_CHECK_CONFIDENTIAL_GUEST_SUPPORT\n");
 }
 
 static bool machine_get_nvdimm(Object *obj, Error **errp)
 {
+    trace_machine_get_nvdimm("MACHINE_GET_NVDIMM\n");
     MachineState *ms = MACHINE(obj);
 
     return ms->nvdimms_state->is_enabled;
@@ -499,6 +530,7 @@ static bool machine_get_nvdimm(Object *obj, Error **errp)
 
 static void machine_set_nvdimm(Object *obj, bool value, Error **errp)
 {
+    trace_machine_set_nvdimm("MACHINE_SET_NVDIMM\n");
     MachineState *ms = MACHINE(obj);
 
     ms->nvdimms_state->is_enabled = value;
@@ -506,6 +538,7 @@ static void machine_set_nvdimm(Object *obj, bool value, Error **errp)
 
 static bool machine_get_hmat(Object *obj, Error **errp)
 {
+    trace_machine_get_hmat("MACHINE_GET_HMAT\n");
     MachineState *ms = MACHINE(obj);
 
     return ms->numa_state->hmat_enabled;
@@ -513,6 +546,7 @@ static bool machine_get_hmat(Object *obj, Error **errp)
 
 static void machine_set_hmat(Object *obj, bool value, Error **errp)
 {
+    trace_machine_set_hmat("MACHINE_SET_HMAT\n");
     MachineState *ms = MACHINE(obj);
 
     ms->numa_state->hmat_enabled = value;
@@ -520,6 +554,7 @@ static void machine_set_hmat(Object *obj, bool value, Error **errp)
 
 static char *machine_get_nvdimm_persistence(Object *obj, Error **errp)
 {
+    trace_machine_get_nvdimm_persistence("MACHINE_GET_NVDIMM_PERSISTENCE\n");
     MachineState *ms = MACHINE(obj);
 
     return g_strdup(ms->nvdimms_state->persistence_string);
@@ -528,6 +563,7 @@ static char *machine_get_nvdimm_persistence(Object *obj, Error **errp)
 static void machine_set_nvdimm_persistence(Object *obj, const char *value,
                                            Error **errp)
 {
+    trace_machine_set_nvdimm_persistence("MACHINE_SET_NVDIMM_PERSISTENCE\n");
     MachineState *ms = MACHINE(obj);
     NVDIMMState *nvdimms_state = ms->nvdimms_state;
 
@@ -547,11 +583,13 @@ static void machine_set_nvdimm_persistence(Object *obj, const char *value,
 
 void machine_class_allow_dynamic_sysbus_dev(MachineClass *mc, const char *type)
 {
+    trace_machine_class_allow_dynamic_sysbus_dev("MACHINE_CLASS_ALLOW_DYNAMIC_SYSBUS_DEV\n");
     QAPI_LIST_PREPEND(mc->allowed_dynamic_sysbus_devices, g_strdup(type));
 }
 
 bool device_is_dynamic_sysbus(MachineClass *mc, DeviceState *dev)
 {
+    trace_device_is_dynamic_sysbus("DEVICE_IS_DYNAMIC_SYSBUS\n");
     Object *obj = OBJECT(dev);
 
     if (!object_dynamic_cast(obj, TYPE_SYS_BUS_DEVICE)) {
@@ -563,6 +601,7 @@ bool device_is_dynamic_sysbus(MachineClass *mc, DeviceState *dev)
 
 bool device_type_is_dynamic_sysbus(MachineClass *mc, const char *type)
 {
+    trace_device_type_is_dynamic_sysbus("DEVICE_TYPE_IS_DYNAMIC_SYSBUS\n");
     bool allowed = false;
     strList *wl;
     ObjectClass *klass = object_class_by_name(type);
@@ -578,6 +617,7 @@ bool device_type_is_dynamic_sysbus(MachineClass *mc, const char *type)
 
 static char *machine_get_memdev(Object *obj, Error **errp)
 {
+    trace_machine_get_memdev("machine_get_memdev\n");
     MachineState *ms = MACHINE(obj);
 
     return g_strdup(ms->ram_memdev_id);
@@ -585,6 +625,7 @@ static char *machine_get_memdev(Object *obj, Error **errp)
 
 static void machine_set_memdev(Object *obj, const char *value, Error **errp)
 {
+    trace_machine_set_memdev("machine_set_memdev\n");
     MachineState *ms = MACHINE(obj);
 
     g_free(ms->ram_memdev_id);
@@ -647,6 +688,7 @@ HotpluggableCPUList *machine_query_hotpluggable_cpus(MachineState *machine)
 void machine_set_cpu_numa_node(MachineState *machine,
                                const CpuInstanceProperties *props, Error **errp)
 {
+    trace_machine_set_cpu_numa_node("MACHINE_SET_CPU_NUMA_NODE\n");
     MachineClass *mc = MACHINE_GET_CLASS(machine);
     NodeInfo *numa_info = machine->numa_state->nodes;
     bool match = false;
@@ -740,6 +782,7 @@ void machine_set_cpu_numa_node(MachineState *machine,
 static void machine_get_smp(Object *obj, Visitor *v, const char *name,
                             void *opaque, Error **errp)
 {
+    trace_machine_get_smp("MACHINE_GET_SMP\n");
     MachineState *ms = MACHINE(obj);
     SMPConfiguration *config = &(SMPConfiguration){
         .has_cpus = true, .cpus = ms->smp.cpus,
@@ -759,6 +802,7 @@ static void machine_get_smp(Object *obj, Visitor *v, const char *name,
 static void machine_set_smp(Object *obj, Visitor *v, const char *name,
                             void *opaque, Error **errp)
 {
+    trace_machine_set_smp("MACHINE_SET_SMP\n");
     MachineState *ms = MACHINE(obj);
     g_autoptr(SMPConfiguration) config = NULL;
 
@@ -771,6 +815,7 @@ static void machine_set_smp(Object *obj, Visitor *v, const char *name,
 
 static void machine_class_init(ObjectClass *oc, void *data)
 {
+    trace_machine_class_init("MACHINE_CLASS_INIT\n");
     MachineClass *mc = MACHINE_CLASS(oc);
 
     /* Default 128 MB as guest ram size */
@@ -877,6 +922,7 @@ static void machine_class_init(ObjectClass *oc, void *data)
 
 static void machine_class_base_init(ObjectClass *oc, void *data)
 {
+    trace_machine_class_base_init("MACHINE_CLASS_BASE_INIT\n");
     MachineClass *mc = MACHINE_CLASS(oc);
     mc->max_cpus = mc->max_cpus ?: 1;
     mc->min_cpus = mc->min_cpus ?: 1;
@@ -893,6 +939,7 @@ static void machine_class_base_init(ObjectClass *oc, void *data)
 
 static void machine_initfn(Object *obj)
 {
+    trace_machine_initfn("MACHINE_INITFN\n");
     MachineState *ms = MACHINE(obj);
     MachineClass *mc = MACHINE_GET_CLASS(obj);
 
@@ -944,6 +991,7 @@ static void machine_initfn(Object *obj)
 
 static void machine_finalize(Object *obj)
 {
+    trace_machine_finalize("MACHINE_FINALIZE\n");
     MachineState *ms = MACHINE(obj);
 
     g_free(ms->kernel_filename);
@@ -960,26 +1008,31 @@ static void machine_finalize(Object *obj)
 
 bool machine_usb(MachineState *machine)
 {
+    trace_machine_usb("MACHINE_USB\n");
     return machine->usb;
 }
 
 int machine_phandle_start(MachineState *machine)
 {
+    trace_machine_phandle_start("MACHINE_PHANDLE_START\n");
     return machine->phandle_start;
 }
 
 bool machine_dump_guest_core(MachineState *machine)
 {
+    trace_machine_dump_guest_core("MACHINE_DUMP_GUEST_CORE\n");
     return machine->dump_guest_core;
 }
 
 bool machine_mem_merge(MachineState *machine)
 {
+    trace_machine_mem_merge("MACHINE_MEM_MERGE\n");
     return machine->mem_merge;
 }
 
 static char *cpu_slot_to_string(const CPUArchId *cpu)
 {
+    trace_cpu_slot_to_string("CPU_SLOT_TO_STRING\n");
     GString *s = g_string_new(NULL);
     if (cpu->props.has_socket_id) {
         g_string_append_printf(s, "socket-id: %"PRId64, cpu->props.socket_id);
@@ -1007,6 +1060,7 @@ static char *cpu_slot_to_string(const CPUArchId *cpu)
 
 static void numa_validate_initiator(NumaState *numa_state)
 {
+    trace_numa_validate_initiator("NUMA_VALIDATE_INITIATOR\n");
     int i;
     NodeInfo *numa_info = numa_state->nodes;
 
@@ -1033,6 +1087,7 @@ static void numa_validate_initiator(NumaState *numa_state)
 
 static void machine_numa_finish_cpu_init(MachineState *machine)
 {
+    trace_machine_numa_finish_cpu_init("MACHINE_NUMA_FINISH_CPU_INIT\n");
     int i;
     bool default_mapping;
     GString *s = g_string_new(NULL);
@@ -1103,6 +1158,7 @@ MemoryRegion *machine_consume_memdev(MachineState *machine,
 
 void machine_run_board_init(MachineState *machine)
 {
+    trace_machine_run_board_init("MACHINE_RUN_BOARD_INIT\n");
     MachineClass *machine_class = MACHINE_GET_CLASS(machine);
     ObjectClass *oc = object_class_by_name(machine->cpu_type);
     CPUClass *cc;
@@ -1193,6 +1249,7 @@ static NotifierList machine_init_done_notifiers =
 
 void qemu_add_machine_init_done_notifier(Notifier *notify)
 {
+    trace_qemu_add_machine_init_done_notifier("QEMU_ADD_MACHINE_INIT_DONE_NOTIFIER\n");
     notifier_list_add(&machine_init_done_notifiers, notify);
     if (phase_check(PHASE_MACHINE_READY)) {
         notify->notify(notify, NULL);
@@ -1201,11 +1258,13 @@ void qemu_add_machine_init_done_notifier(Notifier *notify)
 
 void qemu_remove_machine_init_done_notifier(Notifier *notify)
 {
+    trace_qemu_remove_machine_init_done_notifier("QEMU_REMOVE_MACHINE_INIT_DONE_NOTIFIER\n");
     notifier_remove(notify);
 }
 
 void qdev_machine_creation_done(void)
 {
+    trace_qdev_machine_creation_done("QDEV_MACHINE_CREATION_DONE\n");
     //printf("qdev_machine_creation_done\n");
     cpu_synchronize_all_post_init();
 
