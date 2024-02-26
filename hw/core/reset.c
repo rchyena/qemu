@@ -41,7 +41,7 @@ static QTAILQ_HEAD(, QEMUResetEntry) reset_handlers =
 
 void qemu_register_reset(QEMUResetHandler *func, void *opaque)
 {
-    //printf("qemu_register_reset\n");
+    printf("qemu_register_reset\n");
     trace_qemu_register_reset("QEMU_REGISTER_RESET\n");
     QEMUResetEntry *re = g_malloc0(sizeof(QEMUResetEntry));
 

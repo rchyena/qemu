@@ -56,4 +56,4 @@ stm32f2xx_gpio_class_init(const char *status) "%s"
 stm32f2xx2_gpio_set_iclk(const char *status) "%s"
 stm32f2xx2_gpio_set_fclk(const char *status) "%s"
 stm32f2xx2_gpio_class_init(const char *status) "%s"
-stm32f2xx_gpio_register_types(const char *status) "%s
+stm32f2xx_gpio_register_types(const char *status) "%s"

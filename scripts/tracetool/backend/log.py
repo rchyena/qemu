@@ -33,9 +33,18 @@ def generate_h(event, group):
         # already checked on the generic format code
         cond = "true"
     else:
+        # Not sure how this pipeline works, but these trace events only appear
+        # if they've been declared in the source
+        # e.g. cond -> trace_event_get_state(TRACE_UPSAT_COMM_MACHINE_INIT)
         cond = "trace_event_get_state(%s)" % ("TRACE_" + event.name.upper())
 
-    out('    if (%(cond)s && qemu_loglevel_mask(LOG_TRACE)) {',
+    # Looking to see if tracing is enabled, and if so, compile in
+    # Akin to saying "if trace function exists" AND "tracing was enabled"
+    # Dynamically change state, but make sure we react here
+    # get_state is prob looking at internal memory, but for now replace with some external call
+    trace_env = "TRACE_" + event.name.upper()
+    out(
+        '    if ( getenv("%s") ) {' % (trace_env), 
         '        if (message_with_timestamp) {',
         '            struct timeval _now;',
         '            gettimeofday(&_now, NULL);',

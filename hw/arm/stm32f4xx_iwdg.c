@@ -57,7 +57,7 @@ const char *iwdg_addrs[] = {
  * Next expiration is computed in ns based on new counter value and the timer frequency
  * (period). This might be computed as follows: period = (1 / TIMER_FREQ_MHZ) * 1000 * scale.
 */    
-static int32_t tim_period(STM32F4xxIWDGState *s)
+static uint32_t tim_period(STM32F4xxIWDGState *s)
 {   
     //printf("[IWDG]: tim_period: prescaler %lu\n", s->prescaler);
     /* LSI frequency = 37~40kHz 
@@ -67,7 +67,8 @@ static int32_t tim_period(STM32F4xxIWDGState *s)
      * However, with 40kHz, the watchdog timer accuracy is closer 
      * to the real value. 
      */
-    int32_t period = (1000000 * s->prescaler) / 40;
+    //int32_t period = (1000000 * s->prescaler) / 40;
+    uint32_t period = (10000000 * s->prescaler) / 40;
     //printf("[IWDG]: Multiplying period %lu by s->iwdg_rlr %lu to get period of %lu\n", period, s->iwdg_rlr, period * s->iwdg_rlr);
     trace_tim_period(period * s->iwdg_rlr);
     return ((period * s->iwdg_rlr)); // time in nanoseconds

@@ -218,7 +218,7 @@ static void stm32f2xx_spi_write(void *opaque, hwaddr addr,
     uint32_t value = val64;
 
     DB_PRINT("Address: 0x%" HWADDR_PRIx ", Value: 0x%x\n", addr, value);
-    //printf("[SPI]: stm32f2xx_spi_write: 0x%" HWADDR_PRIx " %s, Value: 0x%x\n", addr, spi_addrs[addr], value);
+    printf("[SPI]: stm32f2xx_spi_write: 0x%" HWADDR_PRIx " %s, Value: 0x%x\n", addr, spi_addrs[addr], value);
     trace_stm32f2xx_spi_write(value);
     
     /*
